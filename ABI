@@ -1,0 +1,8 @@
+proc:    di -> si -> d ->  c  -> r8 -> r9 (-> stack )* -> a:d
+syscall: di -> si -> d -> r10 -> r8 -> r9 (-> stack )* -> a:d
+       | a = vector. c and r11 are allways gone, the rest are
+       | syscall-speciffic, except the caller-owneds.
+
+stack: rsp, rbp
+tmp: r10, r11
+caller-owned: r12, r13, r14, r15, rbx

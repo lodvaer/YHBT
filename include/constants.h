@@ -1,0 +1,11 @@
+
+HIGH_HALF = 0FFFF800000000000h
+IDENT_MAP = 0FFFFF00000000000h
+
+MAX_SYSCALLS = 0Fh
+
+MALLOC_ORIG  = 200000h
+MALLOC_MAX   = 200000h
+; Soon to be deprecated:
+PAGE_ORIG    = 100000h
+; vim: ts=8 sw=8 syn=fasm

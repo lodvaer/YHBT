@@ -1,0 +1,222 @@
+### TODO, semi-in-order
+
+X: Implement the lib/mm stuff
+
+X: Exceptions, how could I forget!
+
+Then (some of) the kernel/mm stuff...
+X: Then the alarm.
+
+And the processes, minus the VFS
+After We've gotten to where processes can run in usermode, implement the VFS.
+
+Then the true terminal, and make the processes and kputs use it.
+And after that, /proc
+
+After we got a terminal running, we call it presentable,
+    put it under version control, and go public or something.
+
+### Design ranting:
+
+I couldn't decide between microkernel and monolithic, so I made both in one.
+
+Device drivers can be builtin(Y), modules(M) or programs(P)
+
+The core idea is that having a driver as a P, M or Y shouldn't matter, because
+it's just a file, and through that common interface all three can be supported.
+
+Though, if it is a Y or M, heavy optimizations should take place in the
+runtime-generated file descriptor quaject.
+
+The first thing the driver should do is register itself under devfs
+
+## character_device interface:
+
+proc read
+proc write
+
+Badam, tschh!
+
+## fd pipe quaject
+
+; Reference counting:
+var refcnt
+proc up
+proc down
+
+callout write
+callout read
+    Contains code for that special target file.
+    In the case of a in-kernel device driver, jumps directly to
+        the device-speciffic read/write call, as specified by it 
+        when opening the file.
+    In the case of a program device-driver, uses the IPC or RPC
+        to tell the driver what to do.
+
+## VFS
+
+To be able to make IPC and RPCs files, I guess the VFS has to be in the kernel.
+Either that or init has to create some ad-hoc FDs to the VFS' calls.
+
+Private namespaces seem too complex for version 1, a least.
+Could be reimplemented in a later version for Plan 9-ish functionality.
+
+Lazy garbage-collected node-graph with reference counting.
+
+## proc
+
+Handles procedures, context switching
+
+Also registers under /proc in the VFS.
+
+Includes functionality for:
+* IPC ; /proc/1/ipc
+    What's written to it becomes the message passed.
+    IPC has asynchronous send, synchronous receive, but has
+    a way to check if it has messages waiting.
+* RPC ; /proc/1/rpc/read
+* signals ; /proc/1/sig/{USR1,10}
+* FDs ; /proc/1/fd/1
+* Memory: /proc/pages/(starting adresses of mapped pages)
+
+/proc/self allways refers to the current process.
+## devfs
+
+
+
+## System Calls
+
+signal(Int signum, *Mem handler) ; Handles which procedures handle the different signals.
+alarm(Int jiffies) ; Send a SIGALARM in n jiffies.
+
+open(*Char file, Int flags)
+close(Int fd)
+
+Int size read(Int fd, *Mem buf, Int size)
+Int size write(Int fd, *Mem buf, Int length)
+
+Int pid getpid()
+Int tid gettid()
+
+Int pid fork(Int flags)
+;  Allways returns 0 for the calling thread/process
+;  Only the calling thread is forked.
+;  Flags for what should be shared:
+;    F_TEXT
+;    F_TLS
+;    F_DATA
+;    F_STACK
+;    F_PID   ; Keep the PID, together with the whole PID-structure, such as
+;              signals, RPC-calls, IPC, etc.
+
+
+; Semaphores are, guess what, files! /proc/self/semaphore
+P(Int fd) ; Procure
+V(Int fd) ; Vacate
+
+### Implementation rant
+
+
+## How drivers can be both in usermode and kernelmode.
+
+# Cores
+To begin with, we have the basic syscall... The set_syscall.
+
+set_syscall(Int syscall, Proc handler):
+    set_syscall checks to see if the current running task has EUID 0.
+    If yes, it creates a quaject that changes the adress space of the calling thread
+    to whatever got the set_syscall approved and calls the supplied Proc.
+
+This is the method that core P drivers and servers uses to set up functionality.
+Only the priviledged few gets officially accepted as syscalls, but it's your computer,
+so you can easily make your own fun.
+
+However, if the driver/server is Y, the set_syscall gets moved to the init macro,
+and the code is called directly instead.
+
+# Utilities
+
+All utility servers and drivers, not strictly needed for the system to function register their IPC
+to proc, which then reveals it to the world under procfs after the VFS gets loaded.
+
+Same thing with the initialization macro upon OS load or the initalization code upon driver execution.
+
+(I'm placing a mighty lot on the magic of those FD quajects)
+
+## IPC, and how it can be a file.
+
+/proc/self/ipc and /proc/self/ipc_size (how much is in the IPC queue)
+
+# Blocking fasm example (variables near the code for clarity):
+
+str:    db "/proc/self/ipc", 0
+cmd:    times 8 db 0
+driver_code:
+        mov rdi, str
+        mov rsi, O_RDONLY or O_DIRECT
+        mov rax, SYS_OPEN
+        syscall
+        
+        assert rax, a, 0, "ERROR"
+
+        mov r15, rax ; Store the FD
+.back:
+        mov rdi, r15
+        mov rsi, cmd
+        mov rdx, 8 ; Read 8 bytes, the message type
+        mov rax, SYS_READ
+        syscall
+	
+	check_errors
+
+	mov rax, [cmd]
+
+        cmp rax, MSG_HIJAD
+        je .commit_genocide
+
+        cmp rax, MSG_PEACE
+        je .love_everybody
+
+        jmp fail
+
+.love_information:
+        times 64 db 0
+.love_everybody:
+        mov rdi, r15
+        mov rsi, .love_information
+        mov rdx, 64
+        syscall
+
+        ; Check some magic 0xDEAD 0xBABEs, perhaps, to ensure that it's a valid message.
+
+        jmp do_stuff_with_love
+
+#end
+In kernel mode it is of course much simpler, as the message is read from the calling thread directly.
+
+
+### After I got a running system (read: a year or two into the future)
+# Parsec-clone in assembly
+No ideas yet.
+
+Most of the creative work will go into defining the data structures, methinks.
+
+# My own LISP-dialect with a incremental compiler using said clone
+
+Type-safety:
+
+Currying.
+
+Quantum superpositions:
+
+(define (+ n) (| n (\ (x) (+ (#+ n x)))))
+
+Where (#+ 5 5) is the primitive pluss, | is the quantum OR, and \ is lambda.
+
+This makes it possible to do ((+ 5 5) 5). With a sparcle of syntactic shugar for currying,
+this becomes (+ 5 5 5), and functions with variable argument size are thus definable.
+
+This effectively represents the normal LISP + which is able to take infinite arguments,
+because it could either be a number or a function taking a new argument, which, when
+expeanded, could create an infinite chain of (#+ (#+ (#+ (#+ ...) 5) 5) 5).
+

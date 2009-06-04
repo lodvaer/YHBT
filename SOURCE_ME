@@ -1,0 +1,18 @@
+# vim: syn=sh
+cat <<'EOD'
+YHBT toolset:
+  lookup [addr] [range]
+  -- Lookup an instruction address and the surounding instructions.
+  -- range instructions gets printed in either direction.
+Common commands not included here:
+  make
+  -- Compile the source
+  make q
+  -- Compile, make disk image, and boot it with qemu
+  make b
+  -- Compile, make disk image, and boot it with bochs
+EOD
+
+PWD=`pwd`
+
+alias lookup=$PWD'/tools/lookup.py'
