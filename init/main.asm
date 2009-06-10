@@ -34,8 +34,7 @@ use32
 	bts eax, CR4.PAE
 	mov cr4, eax
 
-include '32b_paging.asm'
-
+	; For paging, see kernel/mm.asm
 match I, TO_INIT_32 {
 	irp do_init, I  \{
 		do_init
@@ -71,19 +70,17 @@ use64
 	mov rax, (.high_half + HIGH_HALF)
 	jmp rax
 .high_half:
+
 	mov rax, GDT.rGDT + HIGH_HALF
 	mov [GDT.loc], rax
 	lgdt [GDT]
-	mov rax, cr4
-	bts rax, CR4.PGE
-	mov cr4, rax
-	
 
 match I, TO_INIT_64 {
 	irp do_init, I  \{
 		do_init
 	\}
 }
-
+	; TODO: Load the initramfs, load /sbin/init,
+	; and jump to the main proc loop.
 	jmp kmain
 ; vim: ts=8 sw=8 syn=fasm

@@ -28,7 +28,8 @@ it's just a file, and through that common interface all three can be supported.
 Though, if it is a Y or M, heavy optimizations should take place in the
 runtime-generated file descriptor quaject.
 
-The first thing the driver should do is register itself under devfs
+The first thing the driver should do is register itself under devfs if it's a device,
+sysfs if it's a server, or in some cases, both.
 
 ## character_device interface:
 

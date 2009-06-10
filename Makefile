@@ -4,7 +4,7 @@ all : MBR
 MBR :
 	fasm -s kern.fas loaders/MBR.asm kern
 clean :
-	rm -f kern /tmp/hda
+	rm -f kern kern.fas /tmp/hda
 
 q : MBR
 	qemu-img create /tmp/hda 50M >/dev/null

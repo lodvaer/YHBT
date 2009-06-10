@@ -19,6 +19,7 @@ include 'lib/string.asm'
 include 'lib/stdlib.asm'
 include 'lib/debug.asm'
 
+include 'kernel/mm.asm'
 include 'kernel/misc.asm'
 include 'kernel/tables.asm'
 include 'kernel/ktty.asm'

@@ -35,23 +35,26 @@ def asmline(loc):
     if loc == 0:
         return ""
     loc = preproc + 16 + loc
-    return asmseg(loc)
+    return "\t\t" + asmseg(loc)
 
 def asmseg(loc):
-    if loc > preproc + preproc_length or fas[loc] == "\x00":
+    if loc > preproc + preproc_length or fas[loc] == "\x00" or fas[loc] == ';':
         return ""
     if fas[loc] == "\x1A":
         len = byte(loc + 1)
-        return "\t" + fas[loc + 2: loc + 2 + len] + asmseg(loc+2+len)
+        return " " + fas[loc + 2: loc + 2 + len] + asmseg(loc+2+len)
     if fas[loc] == ",":
-        return "," + asmseg(loc + 1)
+        return "," + "\t" + asmseg(loc + 1)
     if fas[loc] == "\"":
         len = dword(loc + 1)
         if len > 100:
             return "Too big."
         loc = loc + 5
         return "\t\"" + fas[loc:loc + len] + "\"" + asmseg(loc + len)
-    return "" #"\t\t" + hex(ord(fas[loc]))
+    if fas[loc] in [':', '[', '(', ')', ']', '+', '-', '*', '/',\
+                    '<', '>', '=', '~']:
+        return " " + fas[loc] + asmseg(loc + 1)
+    return "" "\tEEE\t" + fas[loc]
 
 asm_offsets = [asm + i for i in xrange(0, asm_length, 28)][:-1]
 asms = {}
