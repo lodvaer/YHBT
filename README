@@ -28,9 +28,9 @@ Have fun.
 		enough code to warrant it's own folder.
 /include	Header files, only stuff that doesn't compile to anything.
 /drivers	Programs/modules that provide interfaces to the devices.
-/servers	Programs/modules that provide functionality not speciffic to hardware.
+/servers	Programs/modules that provide functionality not specific to hardware.
 /init		Startup-code.
-/lib		Libraries, may or may not be kernel-speciffic.
+/lib		Libraries, may or may not be kernel-specific.
 /share		Things not code. (images, fonts, etc.)
 /loaders	Various ways of getting the kernel onto the system.
 /tools		Debugging-tools, documentation generation, etc.

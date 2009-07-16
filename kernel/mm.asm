@@ -1,4 +1,4 @@
-; Kernel-speciffic mm-stuff.
+; Kernel-specific mm-stuff.
 ; Among other things:
 ;  Paging; paddr_alloc, paddr_free, palloc, pfree,
 ;          copying page directories,
@@ -8,7 +8,7 @@
 
 append TO_INIT_16, mm.init_16
 macro mm.init_16 {
-	; Detect memory here.
+	; TODO: Detect memory here.
 }
 append TO_INIT_32, mm.init_32
 macro mm.init_32 {
