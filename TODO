@@ -1,11 +1,10 @@
 ### TODO, semi-in-order
 
-X: Implement the lib/mm stuff
-
-X: Exceptions, how could I forget!
-
-Then (some of) the kernel/mm stuff...
-X: Then the alarm.
+# kernel/mm:
+X- paddr_get
+X- paddr_free
+-- palloc
+-- pfree
 
 And the processes, minus the VFS
 After We've gotten to where processes can run in usermode, implement the VFS.

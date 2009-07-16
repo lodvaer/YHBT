@@ -6,6 +6,86 @@ debug_ground:
 debug_joiner:
 	db ":", 0
 
+
+
+;! Print the taken pages in a page table.
+;: *PageTable -> Int level -> IO ()
+; Quick and dirty.
+debug_print_ptable:
+	push rbx, r15, r14, r13
+	mov r13, rsi
+	lea r14, [.table]
+
+	cmp rdi, 0
+	jne .got_it
+	mov rdi, cr3
+.got_it:
+	mov r15, IDENT_MAP
+	add r15, rdi
+	mov rbx, 0x1000 / 16
+	lea r14, [.table]
+
+	cmp r13, 0
+	jne .loop
+	shr rbx, 1 ; Or the identity-mapping floods us.
+	add rbx, 10h
+.loop:
+	bt  qword [r15], 0
+	jnc .over
+
+	mov rdi, [r14 + r13*8]
+	call kputs
+
+	mov rdi, r15
+	call kprinthex
+
+	lea rdi, [debug_joiner]
+	call kputs
+
+	mov rdi, [r15]
+	call kprinthex
+
+	lea rdi, [debug_ground]
+	call kputs
+
+	cmp r13, 3
+	je .over
+
+	mov rdi, [r15]
+
+	cmp r13, 2
+	jne .skipcheck
+
+	test rdi, PDE.PS
+	jnz .over
+.skipcheck:
+	and rdi, not 7FFh
+
+	mov rsi, r13
+	inc rsi
+	call debug_print_ptable
+
+.over:
+	add r15, 16
+	dec rbx
+	jnz .loop
+
+	pop rbx, r15, r14, r13
+	ret
+
+.debug_pml4: db "PML4E: ", 0
+.debug_pdp:  db "    PDPE: ", 0
+.debug_pd:   db "        PDE: ", 0
+.debug_pt:   db "            PTE: ", 0
+.debug_p:    db "                PE: ", 0
+
+.table:
+	dq .debug_pml4 + IDENT_MAP
+	dq .debug_pdp  + IDENT_MAP
+	dq .debug_pd   + IDENT_MAP
+	dq .debug_pt   + IDENT_MAP
+	dq .debug_p    + IDENT_MAP
+
 ;! Print the current alarms
 ;: IO ()
 ;. kprinthet, kputs
@@ -78,7 +158,7 @@ debug_print_mem:
 ;- r8, rdi, rsi, rdx
 ;. kprinthex, kputs
 debug_print_mallocs:
-	push rbx
+	push rbx, r15
 	mov rbx, [malloc.base]
 	xor r8, r8
 
@@ -86,29 +166,29 @@ debug_print_mallocs:
 	call kputs
 	mov rdi, rbx
 	call kprinthex
+.loop:
 	lea rdi, [debug_arrow]
 	call kputs
-.loop:
-	mov rdi, [rbx + r8]
+
+	mov r15, [rbx + r8]
+	mov rdi, r15
 	call kprintaddr
-	btr rdi, 63
-	mov r11, rdi
-	add r8, rdi
+	btr r15, 63
+	add r8, r15
 	add r8, 8
 
-	lea rdi, [debug_arrow]
-	call kputs
-
-	or r11, r11
+	test r15, r15
 	jz .phail
 
 	cmp r8, [malloc.max]
 	jnae .loop
 .phail:
+	lea rdi, [debug_arrow]
+	call kputs
 	lea rdi, [debug_ground]
 	call kputs
 
-	pop rbx
+	pop rbx, r15
 	ret
 .header:
 	db "Mallocs: ", 10, 0
