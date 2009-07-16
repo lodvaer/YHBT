@@ -14,9 +14,10 @@ use16
 	jmp init
 use64
 
+; The order of inclusion matters _a lot_.
+
 include 'lib/assert.asm'
 include 'lib/string.asm'
-include 'lib/stdlib.asm'
 include 'lib/debug.asm'
 
 include 'kernel/mm.asm'
@@ -24,7 +25,8 @@ include 'kernel/misc.asm'
 include 'kernel/tables.asm'
 include 'kernel/ktty.asm'
 include 'kernel/ints.asm'
-include 'kernel/alarm.asm'
+include 'kernel/alarm.asm' ; Needs kernel/ints
+include 'lib/stdlib.asm'   ; Needs kernel/mm
 
 
 match =Y, CFG_TTY_TEXT {
@@ -47,6 +49,10 @@ kmain:
 	; Only after we have cleared memory is it safe to enable interrupts,
 	; because stuff like the clock needs it's variables zeroed.
 	sti
+
+match =Y, CFG_TESTRUN {
+	include 'tests/main.asm'
+}
 
 CALLTRACE_ACTIVE = CALLTRACE
 	; Testing components at the moment go here:
