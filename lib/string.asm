@@ -15,6 +15,7 @@ memset:
 	mov rcx, rdx
 	mov eax, esi
 	rep stosb
+	sub rdi, rdx
 	ret
 
 ; Attempted optimization, or something like that.

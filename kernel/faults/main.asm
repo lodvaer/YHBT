@@ -22,6 +22,7 @@ macro faults.init {
 macro default_fault_proc name
 {
 	proc name
+	xchg bx, bx
 	if name in <fault_has_error>
 	else
 		push 0
@@ -122,7 +123,7 @@ class faults
 	endproc
 
 	default_fault_proc segfault
-	.msg: 
+	.msg:
 		db "0B#NP: Segment not present.", 10, 0
 	endproc
 

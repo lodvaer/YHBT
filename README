@@ -17,3 +17,85 @@
 
 Have fun.
 
+
+
+# Quick intro:
+
+## Layout:
+
+/kernel		Kernel internals.
+/kernel/<sub>	Kernel internal <sub> where <sub> is a module with
+		enough code to warrant it's own folder.
+/include	Header files, only stuff that doesn't compile to anything.
+/drivers	Programs/modules that provide interfaces to the devices.
+/servers	Programs/modules that provide functionality not speciffic to hardware.
+/init		Startup-code.
+/lib		Libraries, may or may not be kernel-speciffic.
+/share		Things not code. (images, fonts, etc.)
+/loaders	Various ways of getting the kernel onto the system.
+/tools		Debugging-tools, documentation generation, etc.
+
+## Macro system
+
+Most of the chaos that makes this possible should be contained within OS.asm, /init/main.asm,
+and /include/macros.h
+
+An example of a heavily commented module follows:
+
+append TO_INIT_16, thing.init_16
+macro thing.init_16 {
+	; Init-code that's supposed to go in 16-bit mode goes here.
+}
+; Same with 32 (for whatever reason you need that) and 64.
+
+class thing	; Start a class of things. Note, there is no object-orientation here, it's just for
+		; grouping. The dot it used to separate groups from their contents, while the _
+		; is used to separate words in the function names. This removes an ambiguity
+		; in normal C-style function naming and grouping, although nobody really had a
+		; problem with it.
+
+	; Create a 64-bit variable that will contain 0 after all the init-code has ran.
+	; This is to be able to overlap init-code and static variables, reducing needed space.
+	var lol
+	; It will be accessible as thing.lol
+	; It will also be accessible as this.lol, but only after the point where it was made,
+	; due to limitation of the macro system.
+
+	; Other sizes:
+	varb byte_lol
+	varw word_lol
+	vard double_lol
+	varq qword_lol ; var is an alias for this.
+	; Variables automagically become size-aligned.
+	; (Although not grouped by size, so having qword, follows by a byte, followed by a qword
+	;  will take 24 bytes.)
+
+	; If you need an initialized variable, or a variable that exists before the init-code
+	; is done, you can use an ivar:
+	ivar thiingy, 0DEADBABE1550DEADh
+	; Same thing with sizes and alignment:
+	ivard double_thiingy, 0DEADBEEFh
+
+	; So, the procedures and the register remapping:
+
+	; First, the docblock:
+
+	;! Description of algorithm
+	;: Type and_argument -> AnotherType and_another_argument -> ReturnType ReturnArgument
+	;- registers_consumed
+	;+ registers_saved
+	:. procedures_used
+	; Long description of the algorith goes here.
+
+	; Then, the procedure.
+	proc proc_name, di->LOL ; register->new_name,
+		; rLOL is now equal to rdi.
+		; Also, rLOLd is edi, rLOLw is di, and rLOLb is dil.
+
+
+		; Algorithm goes here.
+	endproc
+
+endclass
+
+; And that's it.

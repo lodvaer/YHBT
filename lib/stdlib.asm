@@ -23,6 +23,7 @@ _Exit = panic
 abort = panic
 exit = panic
 
+
 append TO_INIT_64, malloc.init
 macro malloc.init {
 	mov rax, MALLOC_MAX
@@ -30,13 +31,25 @@ macro malloc.init {
 	mov [rbx], rax
 }
 
-;! Allocate memory
-;: Int size -> *Mem
-;- rdi, rsi
-malloc:
 ivar malloc.base, HIGH_HALF + MALLOC_ORIG
 ivar malloc.max,  MALLOC_MAX
 var malloc.current
+
+;! Allocate memory before the init routines are done.
+;: Int size -> *Mem
+; Please note that there is no preinit_free...
+preinit_malloc:
+	mov rax, [malloc.base]
+	add [malloc.base], rdi
+	sub [malloc.max], rdi
+	ret
+
+;! Allocate memory
+;: Int size -> *Mem
+;- rdi, rsi
+; rdi should (if not must) be a multiple of 8
+; to not screw up the alignment.
+malloc:
 	assert rdi, ne, 0, "malloc: Called with 0."
 	push rbx, r15
 	xor r15, r15
@@ -66,7 +79,7 @@ align 10h
 	jmp .loopy
 align 10h
 .win_eq:		; Exact size!
-	mov [.current], rsi
+	;mov [.current], rsi
 	bts rax, 63	; Taken
 	mov [rbx + rsi], rax	; It's the exact size, so don't bother
 	lea rax, [rbx + rsi+8]	; with splitting.
@@ -82,7 +95,7 @@ align 10h
 	add rsi, 8
 	
 	mov [rbx + rsi], rax
-	mov [.current], rsi
+	;mov [.current], rsi
 	sub rsi, rdi
 	sub rsi, 8
 	lea rax, [rbx + rsi+8]

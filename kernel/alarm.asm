@@ -1,4 +1,4 @@
-;; 
+;;
 append TO_INIT_64, alarm.init
 
 macro alarm.init {

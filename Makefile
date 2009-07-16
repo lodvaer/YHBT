@@ -3,6 +3,10 @@ all : MBR
 
 MBR :
 	fasm -s kern.fas loaders/MBR.asm kern
+
+COMBOOT :
+	fasm -s kern.fas loaders/COMBOOT.asm /var/tftp/YHBT.cbt
+
 clean :
 	rm -f kern kern.fas /tmp/hda
 

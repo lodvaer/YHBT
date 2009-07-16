@@ -1,6 +1,9 @@
 panic:
 	cli
-;	mov [tty.text.colour], byte 4Fh
+	lea rax, [ktty.e_write]
+	mov [ktty.write], rax
+
+	mov [ktty.colour], byte 4Fh
 	_puts "(PANIC)==> Stack pointer monadic overflow, nyaaaa! <==(PANIC)"
 	call debug_print_calltrace
 	die
