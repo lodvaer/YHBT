@@ -5,7 +5,8 @@ debug_ground:
 	db "|", 10, 0
 debug_joiner:
 	db ":", 0
-
+debug_newline:
+	db 10, 0
 
 
 ;! Print the taken pages in a page table.
@@ -210,13 +211,11 @@ debug_print_calltrace:
 	mov rdi, [r15]
 	call kprintaddr
 	mov r15, [r15 + 8]
-	lea rdi, [debug_arrow]
+	lea rdi, [debug_newline]
 	call kputs
 	cmp r15, 0
 	jne .loop
 .over:
-	lea rdi, [debug_ground]
-	call kputs
 	pop r15
 	ret
 

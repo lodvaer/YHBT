@@ -60,7 +60,7 @@ class alarm
 	;  - Semaphore
 	proc schedule
 		assert rsi, ne, 0, "alarm.schedule: rsi == 0!"
-		assert rdi, le, 2678400, "alarm.schedule: Sleeping for longer than a month!"
+		assert rdi, le, 267840000, "alarm.schedule: Sleeping for longer than a month!"
 
 
 		mov rdx, rdi ; Create the new node

@@ -51,6 +51,7 @@ preinit_malloc:
 ; to not screw up the alignment.
 malloc:
 	assert rdi, ne, 0, "malloc: Called with 0."
+	assert_t rdi, z, 7, "malloc: 8-byte aligned, please."
 	push rbx, r15
 	xor r15, r15
 	mov rbx, [.base]

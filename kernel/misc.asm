@@ -13,7 +13,7 @@ true:
 	ret
 
 false:
-	mov rax, 0
+	xor rax, rax
 	ret
 
 error:

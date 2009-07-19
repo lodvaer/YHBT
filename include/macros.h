@@ -306,7 +306,12 @@ macro class name
 				sak name\\#\\.\\#\\naem, value
 		\\}
 	\}
-
+	macro const naem, val
+	\{
+		append to_restore, \this\#\.\#\naem
+		\this\#\.\#naem equ name\#\.\#\naem
+		name\#\.\#\naem = val
+	\}
 	macro proc naem, [args]
 	\{
 		\common
@@ -360,8 +365,13 @@ macro quaject name
 	\{
 		local I, sak
 		align 8
-		ende = $
-		restore this, proc, var, endquaject
+		if $ and 3Fh
+			ende = $ or 3Fh + 1
+		else
+			ende = $
+		end if
+		restore this
+		purge proc, var, endquaject
 		match I, to_restore \\{
 			irp sak, I \\\{
 				restore sak
