@@ -3,7 +3,7 @@
 # kernel/mm:
 X- paddr_get
 X- paddr_free
--- palloc
+X- palloc
 -- pfree
 
 And the processes, minus the VFS
@@ -12,8 +12,11 @@ After We've gotten to where processes can run in usermode, implement the VFS.
 Then the true terminal, and make the processes and kputs use it.
 And after that, /proc
 
-After we got a terminal running, we call it presentable,
-    put it under version control, and go public or something.
+After we got a terminal running, we call it presentable, and go public or something.
+
+# Whenever:
+-- Go over all the code and move branches around to make their likelyhood coencide
+   with the static AMD64 branch predicter.
 
 ### Design ranting:
 

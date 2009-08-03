@@ -1,11 +1,6 @@
 ;! Tests that verify that malloc is working properly.
 
 proc malloc
-	xor rdi, rdi
-	dec rdi
-	call malloc
-	assert rax, e, -1, "Tests: malloc 0: FAILED"
-
 	mov rdi, 8
 	call malloc
 	assert rax, ne, -1, "Tests: malloc 1: FAILED"

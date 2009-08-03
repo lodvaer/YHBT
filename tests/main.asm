@@ -5,6 +5,7 @@ tests.torun equ
 
 class tests
 	include 'malloc.asm'
+	include 'rbtree.asm'
 endclass
 
 tests.over:

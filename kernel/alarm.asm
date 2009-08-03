@@ -16,6 +16,10 @@ class alarm
 	var ticks
 	var list
 	;: AlarmJob :: [Int time_left : Proc tocall : *AlarmJob prev]
+	const LEFT,   0h
+	const TOCALL, 8h
+	const PREV,  10h
+	const NEXT,  18h
 	
 	;; Interrupt handler
 	;: IO ()
@@ -31,14 +35,14 @@ class alarm
 		cmp rax, 0
 		je .out
 		
-		cmp qword [rax], 0
+		cmp qword [rax + this.LEFT], 0
 		jne .dec
 
 		push rdi
-		mov rdi, [rax + 18h]
+		mov rdi, [rax + this.NEXT]
 		mov [this.list], rdi
 		mov rdi, rax
-		mov rax, [rax + 8]
+		mov rax, [rax + this.TOCALL]
 		call free
 		pop rdi
 
@@ -46,7 +50,7 @@ class alarm
 		pop rax
 		iretq
 	.dec:
-		dec qword [rax]
+		dec qword [rax + this.LEFT]
 	.out:
 		pop rax
 		iretq
@@ -60,14 +64,14 @@ class alarm
 	;  - Semaphore
 	proc schedule
 		assert rsi, ne, 0, "alarm.schedule: rsi == 0!"
-		assert rdi, le, 267840000, "alarm.schedule: Sleeping for longer than a month!"
+		assert rdi, le, 267840000, "alarm.schedule: Scheduling for longer than a month!"
 
 
 		mov rdx, rdi ; Create the new node
 		mov r10, rsi
 		mov rdi, 20h
 		call malloc
-		mov [rax + 8], r10 ; And move proc to it's rightfull place
+		mov [rax + this.TOCALL], r10 ; And move proc to it's rightfull place
 		
 		lea r11, [this.list - 18h]
 		mov r10, [this.list]
@@ -75,7 +79,7 @@ class alarm
 		cmp r10, 0
 		je .last
 
-		mov rsi, [r10]
+		mov rsi, [r10 + this.LEFT]
 
 		cmp rdx, rsi
 		jle .win
@@ -83,26 +87,26 @@ class alarm
 		sub rdx, rsi
 
 		mov r11, r10
-		mov r10, [r10 + 18h]
+		mov r10, [r10 + this.NEXT]
 		jmp .loop
 
 
 	.win:	; Nt <= Jt
 		sub rsi, rdx
-		mov [r10], rsi
-		mov rsi, [r10 + 10h]
-		mov [rax + 10h], rsi ; PREV(rax) <- PREV(r10)
-		mov [r10 + 10h], rax ; PREV(r10) <- rax
-		mov [rsi + 18h], rax ; NEXT(PREV(r10)) <- rax
-		mov [rax + 18h], r10 ; NEXT(rax) <- r10
-		mov [rax], rdx
+		mov [r10 + this.LEFT], rsi
+		mov rsi, [r10 + this.PREV]
+		mov [rax + this.PREV], rsi ; PREV(rax) <- PREV(r10)
+		mov [r10 + this.PREV], rax ; PREV(r10) <- rax
+		mov [rsi + this.NEXT], rax ; NEXT(PREV(r10)) <- rax
+		mov [rax + this.NEXT], r10 ; NEXT(rax) <- r10
+		mov [rax + this.LEFT], rdx
 		ret
 
 	.last:
-		mov [rax], rdx
-		mov [rax + 10h], r11     ; PREV(rax)  <- prev
-		mov qword [rax + 18h], 0 ; NEXT(rax)  <- 0
-		mov [r11 + 18h], rax     ; NEXT(prev) <- rax
+		mov [rax + this.LEFT], rdx
+		mov [rax + this.PREV], r11     ; PREV(rax)  <- prev
+		mov qword [rax + this.NEXT], 0 ; NEXT(rax)  <- 0
+		mov [r11 + this.NEXT], rax     ; NEXT(prev) <- rax
 		ret
 	endproc
 
@@ -112,17 +116,17 @@ class alarm
 	; TODO:
 	;  - Semaphore
 	proc deschedule
-		mov rsi, [rdi + 18h] ; rsi <- NEXT(rdi)
-		mov rax, [rdi]
+		mov rsi, [rdi + this.NEXT] ; rsi <- NEXT(rdi)
+		mov rax, [rdi + this.LEFT]
 		add [rsi], rax ; TIME_LEFT(NEXT(rdi)) += TIME_LEFT(rdi)
-		mov rax, [rdi + 10h]
+		mov rax, [rdi + this.PREV]
 
-		mov [rax + 18h], rsi ; NEXT(PREV(rdi)) <- NEXT(rdi)
+		mov [rax + this.NEXT], rsi ; NEXT(PREV(rdi)) <- NEXT(rdi)
 
 		cmp rsi, 0
 		je  free
 		
-		mov [rsi + 10h], rax ; PREV(NEXT(rdi)) <- PREV(rdi)
+		mov [rsi + this.PREV], rax ; PREV(NEXT(rdi)) <- PREV(rdi)
 		jmp free
 	endproc
 endclass

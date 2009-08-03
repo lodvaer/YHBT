@@ -8,6 +8,108 @@ debug_joiner:
 debug_newline:
 	db 10, 0
 
+;! Print an RBTree
+;: RBTree -> IO ()
+debug_print_rbtree:
+	_puts "RBTree:"
+	xor rsi, rsi
+	mov rdi, [rdi + rbtree.TREE]
+	cmp rdi, 0
+	jne .rbnode
+	lea rdi, [.null]
+	call kputs
+	ret
+	; rdi = RBNode
+	; rsi = indentLevel
+.rbnode:
+	push rbx, r15, r14
+	mov rbx, rdi
+	mov r15, rsi
+
+	test rbx, rbx
+	jz .print_null
+
+		mov rdi, rbx
+		call kprinthex
+
+		lea rdi, [debug_joiner]
+		call kputs
+
+		mov rdi, [rbx + rbtree.KEY]
+		call kprinthex
+
+		lea rdi, [debug_joiner]
+		call kputs
+
+		mov rdi, [rbx + rbtree.PARENT]
+		test rdi, 1
+		jz .red
+		.black:
+			lea rdi, [.s_black]
+			call kputs
+			jmp @f
+		.red:
+			lea rdi, [.s_red]
+			call kputs
+			jmp @f
+
+	.print_null:
+		lea rdi, [.null]
+		call kputs
+	@@:
+
+	lea rdi, [debug_newline]
+	call kputs
+
+	test rbx, rbx
+	jz .ret
+
+	mov rdi, [rbx + rbtree.RIGHT]
+	test rdi, rdi
+	jz @f
+
+	call .indent
+	lea rdi, [.right]
+	call kputs
+	mov rdi, [rbx + rbtree.RIGHT]
+	mov rsi, r15
+	add rsi, 4
+	call .rbnode
+@@:
+
+	mov rdi, [rbx + rbtree.LEFT]
+	test rdi, rdi
+	jz @f
+	call .indent
+
+	lea rdi, [.left]
+	call kputs
+	mov rdi, [rbx + rbtree.LEFT]
+	mov rsi, r15
+	add rsi, 4
+	call .rbnode
+@@:
+.ret:
+	pop rbx, r15, r14
+	ret
+
+.indent:
+	mov r14, r15
+	test r15, r15
+	retz
+@@:	lea rdi, [.space]
+	call kputs
+	dec r15
+	jnz @b
+	mov r15, r14
+	ret
+
+.right:		db "R: ", 0
+.left:		db "L: ", 0
+.null:		db "NULL", 0
+.space:		db " ", 0
+.s_red:		db "Red", 0
+.s_black:	db "Black", 0
 
 ;! Print the taken pages in a page table.
 ;: *PageTable -> Int level -> IO ()

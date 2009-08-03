@@ -156,9 +156,9 @@ macro proc name, [remaps]
 {
 	common
 		label name
-		local to_restore, remap
+		local to_restore
 		to_restore equ
-		macro remap reg, re \{
+		macro _remap reg, re \{
 			\local prg
 			prg equ
 			irp tst, a,b,c,d \\{
@@ -201,9 +201,14 @@ macro proc name, [remaps]
 			\\}
 			append to_restore, prg
 		\}
+		macro remap [rem] \{
+		\forward match reg->re, rem \\{
+				_remap reg, re
+			\\}
+		\}
 	forward
 		match reg->re, remaps \{
-			remap reg, re
+			_remap reg, re
 		\}
 	common
 		if ~ used name
@@ -220,7 +225,7 @@ macro proc name, [remaps]
 					restore top
 				\\\}
 			\\}
-			purge endproc
+			purge endproc, remap, _remap
 		\}
 	
 }

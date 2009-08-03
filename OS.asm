@@ -19,6 +19,7 @@ use64
 include 'lib/assert.asm'
 include 'lib/string.asm'
 include 'lib/debug.asm'
+include 'lib/rbtree.asm'
 
 include 'kernel/mm.asm'
 include 'kernel/misc.asm'
