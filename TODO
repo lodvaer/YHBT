@@ -15,7 +15,7 @@ And after that, /proc
 After we got a terminal running, we call it presentable, and go public or something.
 
 # Whenever:
--- Go over all the code and move branches around to make their likelyhood coencide
+-- Go over all the code and move branches around to make their likelihood coincide
    with the static AMD64 branch predicter.
 
 ### Design ranting:

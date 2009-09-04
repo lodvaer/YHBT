@@ -344,16 +344,18 @@ macro class name
 ; {{{ Quaject macro
 macro quaject name
 {
+	CALLTRACE_ACTIVE = 0
 	local ende, offset, to_restore
 	align 8
 	label name
 	this equ name
 	org 0
+	label name#.start
 	offset = 0
 	to_restore equ 
 	macro var [naem]
 	\{
-		forward naem
+		forward
 			label name\#\.\#\naem at ende + offset
 			append to_restore, \this\#\.\#\naem
 			\this\#\.\#\naem equ name\#\.\#\naem
@@ -368,6 +370,7 @@ macro quaject name
 	\}
 	macro endquaject
 	\{
+		CALLTRACE_ACTIVE = CALLTRACE
 		local I, sak
 		align 8
 		if $ and 3Fh
@@ -407,5 +410,27 @@ common
 .over:
 }
 
+macro _printreg [reg]
+{
+	local .str, .over, .str2
+common
+	pusha
+reverse
+	push reg
+forward
+	jmp .over
+.str:	db `reg, ": ", 0
+.str2:	db 10, 0
+.over:
+	lea rdi, [.str]
+	call kputs
+	pop rdi
+	call kprinthex
+	lea rdi, [.str2]
+	call kputs
+common
+	popa
+
+}
 ; }}}
 ; vim: ts=8 sw=8 syn=fasm

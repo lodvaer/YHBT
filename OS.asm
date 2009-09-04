@@ -21,6 +21,9 @@ include 'lib/string.asm'
 include 'lib/debug.asm'
 include 'lib/rbtree.asm'
 
+include 'kernel/q.asm'
+include 'kernel/proc/proc.asm'
+include 'kernel/proc/q_thread.asm'
 include 'kernel/mm.asm'
 include 'kernel/misc.asm'
 include 'kernel/tables.asm'
@@ -39,7 +42,7 @@ match =Y, CFG_TTY_VESA {
 match =Y, CFG_VFS {
 ;	include 'servers/vfs.asm'
 }
-
+CALLTRACE_ACTIVE = 0
 kmain:
 	; Clean the init-code and initialize
 	; the vars to 0
@@ -56,21 +59,38 @@ match =Y, CFG_TESTRUN {
 }
 
 CALLTRACE_ACTIVE = CALLTRACE
-	; Testing components at the moment go here:
+	lea rax, [.t0]
+	push rax
+	jmp proc.init
+.t0:	; We are here in thread 0.
+	call proc.fork
+	cmp rax, 0
+	je .child
 
-
-@@:	hlt
+.parent:
+	_puts "The parent is alive!"
+	_printreg rax
+	lea r14, [A]
+@@:	mov rdi, r14
+	cli
+	call kputs
+	sti
+	hlt
 	jmp @b
 
-tst1:
-	_puts "Hello, A"
-	ret
-tst2:
-	_puts "Hello, B"
-	ret
-tst3:
-	_puts "Hello, C"
-	ret
+.child:
+	_puts "The child is here!"
+	lea r15, [B]
+@@:	mov rdi, r15
+	cli
+	call kputs
+	sti
+	hlt
+	jmp @b
+
+
+A:	db 'A', 0
+B:	db 'B', 0
 
 align 64 ; So it's on a different cache line.
 _IVARS:
@@ -79,6 +99,7 @@ match I, TO_IVAR {
 		do_ivar
 	\}
 }
+align 8
 _VARS:
 init:
 include 'init/main.asm'

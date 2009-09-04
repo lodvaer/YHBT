@@ -3,6 +3,7 @@
 class ktty
 	ivar write, (HIGH_HALF + ktty.e_write)
 	ivarb colour, 05Fh
+	varb spinlock
 	varb x
 	varb y
 
@@ -12,7 +13,7 @@ class ktty
 	;= kputs
 	proc kputs
 	kputs = this.kputs
-		xor rax, rax
+		xor eax, eax
 		call strlen
 		mov rsi, rax
 		jmp qword [this.write]

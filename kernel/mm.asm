@@ -74,7 +74,7 @@ class mm
 	;! Allocate and map a page into a page table
 	;: *Mem loc -> (PML4|0) -> -> *Mem page
 	;. this.paddr_get
-	;- rax, r10, r11, r8
+	;- rax, rdi, rsi, r10, r11, r8
 	proc palloc
 		assert rdi, ne, 0, "mm.palloc: page at 0 requested..."
 
@@ -175,18 +175,91 @@ class mm
 
 	;! Allocate a page and hook it into the provided table, returning the allocated
 	;: *PTable tbl -> *Mem fin_loc -> Int (offset * 8) -> *PhysPage allocated_page
-	;. mm.paddr_get
+	;. mm.paddr_get, mm.pclear
 	;+ rdi, rsi, rdx
-	; TODO: Clear memory before running it on IRL HW.
+	; TODO: cmpxchg the switcharoo to test if a different
+	;       thread has hooked it, if it prooves needed.
 	proc paddr_hook
 		push rdi, rsi, rdx
 		call mm.paddr_get
+
+		mov rdi, rax
+		mov rax, IDENT_MAP
+		add rdi, rax
+		call mm.pclear
+		mov rax, IDENT_MAP
+		sub rdi, rax
+
+		mov rax, rdi
 		pop rdi, rsi, rdx
 		or  rax, 3
 		bt  rsi, 63
 		jc @f
 		bts rax, 2		; PDE.U
 	@@:	mov [rdi + rdx], rax
+		ret
+	endproc
+
+	;! Clear a page
+	;: *Page -> IO ()
+	;- rax, rcx
+	proc pclear
+		xor eax, eax
+		mov ecx, 40h
+
+	.loop:	prefetchnta [rdi + 100h]
+		movnti [rdi      ], rax
+		movnti [rdi + 8  ], rax
+		movnti [rdi + 10h], rax
+		movnti [rdi + 18h], rax
+		movnti [rdi + 20h], rax
+		movnti [rdi + 28h], rax
+		movnti [rdi + 30h], rax
+		movnti [rdi + 38h], rax
+		add rdi, 40h
+		dec ecx
+		jnz .loop
+
+		sub rdi, 1000h ; Free considering the wait of the sfence?
+		sfence
+		ret
+	endproc
+
+	;! Copy a page
+	;: *Page dest -> *Page src -> IO ()
+	;- rax, rdx, rcx
+	proc pcopy
+		mov ecx, 40h
+	.loop:
+		prefetch  [rsi + 100h]
+		prefetchw [rdi + 100h]
+
+		mov rax, [rsi      ]
+		mov rdx, [rsi + 8h ]
+		mov [rdi      ], rax
+		mov [rdi + 8h ], rdx
+
+		mov rax, [rsi + 10h]
+		mov rdx, [rsi + 18h]
+		mov [rdi + 10h], rax
+		mov [rdi + 18h], rdx
+
+		mov rax, [rsi + 20h]
+		mov rdx, [rsi + 28h]
+		mov [rdi + 20h], rax
+		mov [rdi + 28h], rdx
+
+		mov rax, [rsi + 30h]
+		mov rdx, [rsi + 38h]
+		mov [rdi + 30h], rax
+		mov [rdi + 38h], rdx
+
+		add rdi, 40h
+		add rsi, 40h
+		dec ecx
+		jnz .loop
+		sub rdi, 1000h
+		sub rsi, 1000h
 		ret
 	endproc
 

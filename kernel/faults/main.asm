@@ -1,5 +1,7 @@
 ; The faults and their handlers.
 
+CALLTRACE_ACTIVE = 0
+
 the_faults fix divide, debug, nmi, breakpoint, overflow, boundscheck,\
 	  invalid_opcode, cocpu_unavail, doublefault, cocpu_overrun,  \
 	  invalid_tss, segfault, stack, genprot, pagefault, reserved,  \
@@ -228,5 +230,7 @@ class faults
 		db "1F: Reserved.", 10, 0
 	endproc
 endclass
+
+CALLTRACE_ACTIVE = CALLTRACE
 
 ; vim: ts=8 sw=8 syn=fasm

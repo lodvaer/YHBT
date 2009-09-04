@@ -1,4 +1,5 @@
-YHBT="~/prog/YHBT" CD=. filter="SOURCE_ME README TODO ABI Makefile *.fas *.cfg *.asm *.h *.py" {
+YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas *.cfg *.asm *.h *.py" {
+ LICENCE
  SOURCE_ME
  README
  TODO
@@ -8,7 +9,7 @@ YHBT="~/prog/YHBT" CD=. filter="SOURCE_ME README TODO ABI Makefile *.fas *.cfg *
  OS.cfg
  OS.asm
  tpl.asm
- kernel=kernel{
+ kernel=kernel {
   alarm.asm
   ints.asm
   ktty.asm
@@ -16,56 +17,60 @@ YHBT="~/prog/YHBT" CD=. filter="SOURCE_ME README TODO ABI Makefile *.fas *.cfg *
   mm.asm
   q.asm
   tables.asm
-  proc=proc{
+  proc=proc {
    proc.asm
    procfs.asm
-   q_fd.asm
-   q_proc.asm
+   q_thread.asm
    scheduler.asm
   }
-  faults=faults{
+  faults=faults {
    main.asm
   }
-  syscall=syscall{
+  syscall=syscall {
   }
  }
- include=include{
+ include=include {
   constants.h
   cpu.h
   fcntl.h
   macros.h
   unistd.h
  }
- drivers=drivers{
-  tty=tty{
+ drivers=drivers {
+  tty=tty {
    text.asm
   }
  }
- servers=servers{
+ servers=servers {
   vfs.asm
  }
- init=init{
-  32b_paging.asm
+ init=init {
   main.asm
  }
- lib=lib{
+ lib=lib {
   assert.asm
   debug.asm
+  rbtree.asm
   stdlib.asm
   string.asm
   unistd.asm
  }
- share=share{
-  font=font{
+ share=share {
+  font=font {
    00.asm
   }
  }
- loaders=loaders{
+ loaders=loaders {
   COMBOOT.asm
   GRUB.asm
   MBR.asm
  }
- tools=tools{
+ tests=tests {
+  main.asm
+  malloc.asm
+  rbtree.asm
+ }
+ tools=tools {
   fas.py
   lookup.py
  }

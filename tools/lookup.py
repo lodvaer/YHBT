@@ -20,6 +20,7 @@ except ValueError:
 except IndexError:
     index = 0
     num   = 10000
+
 try:
     index = akeys.index(index)
 except ValueError:

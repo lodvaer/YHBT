@@ -32,6 +32,7 @@ GDT:
 align 8
 .rGDT:
 .0:	dq 0 ; Unused
+
 .1:	dq 0000000011011111100110100000000000000000000000001111111111111111b
 .2:	dq 0000000000100000100110000000000000000000000000000000000000000000b
 ;	   -ignored-||-----||/|||------------------------------------------
@@ -58,12 +59,12 @@ TSS.rsp1:	dq 0 ; RSP for CPL=1
 TSS.rsp2:	dq 0 ; RSP for CPL=2
 TSS.ign2:	dq 0 ; Ignored
 TSS.ist1:	dq 0
-TSS.ist2:	dq 0 
-TSS.ist3:	dq 0 
+TSS.ist2:	dq 0
+TSS.ist3:	dq 0
 TSS.ist4:	dq 0 ; Interrupt stack tables.
-TSS.ist5:	dq 0 
-TSS.ist6:	dq 0 
-TSS.ist7:	dq 0 
+TSS.ist5:	dq 0
+TSS.ist6:	dq 0
+TSS.ist7:	dq 0
 TSS.ign3:	dq 0 ; Ignored
 TSS.ign4:	dw 0 ; Ignored
 TSS.iobase:	dw 0 ; IO bitmap offset.

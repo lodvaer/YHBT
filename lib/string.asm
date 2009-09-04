@@ -4,7 +4,17 @@
 memccpy:
 memcht:
 memcmp:
+;! Copy memory from one location to another
+;: *Mem dest -> *Mem src -> Int size -> IO ()
+;- rcx
+; TODO: Optimize.
 memcpy:
+	cld
+	mov rcx, rdx
+	rep movsb
+	sub rsi, rdx
+	sub rdi, rdx
+	ret
 memmove:
 
 ;; Set memory
