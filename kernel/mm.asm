@@ -3,8 +3,8 @@
 ;  Paging; paddr_alloc, paddr_free, palloc, pfree,
 ;          copying page directories,
 ;          cloning page directories.
-;  SLAB? Fuck it, we just allocate so-and-so many pages.
-;     (Turns out, this is actually SLAB... At least from what Jari OS told me)
+; TODO: SLAB
+
 
 append TO_INIT_16, mm.init_16
 macro mm.init_16 {
@@ -75,7 +75,7 @@ class mm
 	;: *Mem loc -> (PML4|0) -> -> *Mem page
 	;. this.paddr_get
 	;- rax, rdi, rsi, r10, r11, r8
-	proc palloc
+	proc 0, palloc
 		assert rdi, ne, 0, "mm.palloc: page at 0 requested..."
 
 		push rbx
@@ -110,7 +110,7 @@ class mm
 	;: *PML4 -> *Mem fin_loc -> *PDP
 	;- rdx, r10
 	;. mm.paddr_hook
-	proc pdp_get
+	proc 0, pdp_get
 		mov rdx, rsi
 		mov r10, 1FFh shl 39
 		and rdx, r10
@@ -127,7 +127,7 @@ class mm
 	;: *PDP -> *Mem fin_loc -> *PD
 	;- rdx, r10
 	;. mm.paddr_hook
-	proc pd_get
+	proc 0, pd_get
 		mov rdx, rsi
 		mov r10, 1FFh shl 30
 		and rdx, r10
@@ -144,7 +144,7 @@ class mm
 	;: *PD -> *Mem fin_loc -> *PT
 	;- rdx, r10
 	;. mm.paddr_hook
-	proc pt_get
+	proc 0, pt_get
 		mov rdx, rsi
 		mov r10, 1FFh shl 21
 		and rdx, r10
@@ -161,7 +161,7 @@ class mm
 	;: *PT -> *Mem fin_loc -> *Page
 	;- rdx, r10
 	;. mm.paddr_hook
-	proc pageloc_get
+	proc 0, pageloc_get
 		mov rdx, rsi
 		mov r10, 1ffh shl 12
 		and rdx, r10
@@ -179,7 +179,7 @@ class mm
 	;+ rdi, rsi, rdx
 	; TODO: cmpxchg the switcharoo to test if a different
 	;       thread has hooked it, if it prooves needed.
-	proc paddr_hook
+	proc 0, paddr_hook
 		push rdi, rsi, rdx
 		call mm.paddr_get
 
@@ -203,7 +203,7 @@ class mm
 	;! Clear a page
 	;: *Page -> IO ()
 	;- rax, rcx
-	proc pclear
+	proc 0, pclear
 		xor eax, eax
 		mov ecx, 40h
 
@@ -228,7 +228,7 @@ class mm
 	;! Copy a page
 	;: *Page dest -> *Page src -> IO ()
 	;- rax, rdx, rcx
-	proc pcopy
+	proc 0, pcopy
 		mov ecx, 40h
 	.loop:
 		prefetch  [rsi + 100h]
@@ -267,8 +267,8 @@ class mm
 	;: *Mem
 	;- rdi, rsi, rcx, rdx
 	; O(num_pages)
-	; TODO: Fail if OOM. Better algorithm.
-	proc paddr_get
+	; TODO: Fail if OOM. Better algorithm. SMP-ify.
+	proc 0, paddr_get
 		mov rdi, [this.phead]	; *Mem with space for 512 pages
 		xor rsi, rsi		; Accumulator
 		xor rcx, rcx		; Counter.
@@ -319,7 +319,7 @@ class mm
 	;! Free the physical location of a free page
 	;: *Mem -> ()
 	;- rdi, rsi, rdx
-	proc paddr_free
+	proc 0, paddr_free
 		mov rsi, rdi ; rcx: How many steps out
 		shr rsi, 21
 		mov rdx, [this.phead]

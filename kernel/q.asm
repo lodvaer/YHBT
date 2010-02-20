@@ -6,7 +6,7 @@ class q
 	;: *Mem base -> Int realsize -> *Q
 	;. mm.palloc, mm.pclear, memcpy
 	;+ rdi, rsi
-	proc create
+	proc 0, create
 		push rdi, rsi
 		mov edi, 1000h
 		lock xadd [this.base], rdi
@@ -19,7 +19,7 @@ class q
 
 		mov rax, rdi
 		pop rsi, rdx
-		jmp memcpy
+		tailcall memcpy
 	endproc
 
 	;! Clone a quaject
@@ -27,7 +27,7 @@ class q
 	;. mm.palloc, mm.pcopy
 	; rdi = Cloned
 	; rsi = Original
-	proc clone
+	proc 0, clone
 		push rdi
 		mov rdi, 1000h
 		lock xadd [this.base], rdi
@@ -37,7 +37,7 @@ class q
 
 		pop rdi
 		pop rsi
-		jmp mm.pcopy
+		tailcall mm.pcopy
 	endproc
 endclass
 

@@ -31,41 +31,46 @@ d4 equ dd
 d8 equ dq
 ; Null is in kernel/misc.asm
 ; {{{ retcc -> jcc null
-retc   equ jc   null
-reto   equ jo   null
-retz   equ jz   null
-retp   equ jp   null
-rete   equ je   null
-reta   equ ja   null
-retg   equ jg   null
-retb   equ jb   null
-retl   equ jl   null
+macro retj c, landing
+{
+	j#c landing
+}
 
-retae  equ jae  null
-retge  equ jge  null
-retbe  equ jbe  null
-retle  equ jle  null
+macro retc     {  retj c,    null }
+macro reto     {  retj o,    null }
+macro retz     {  retj z,    null }
+macro retp     {  retj p,    null }
+macro rete     {  retj e,    null }
+macro reta     {  retj a,    null }
+macro retg     {  retj g,    null }
+macro retb     {  retj b,    null }
+macro retl     {  retj l,    null }
 
-retnc   equ jnc   null
-retno   equ jno   null
-retnz   equ jnz   null
-retnp   equ jnp   null
-retne   equ jne   null
-retna   equ jna   null
-retng   equ jng   null
-retnb   equ jnb   null
-retnl   equ jnl   null
+macro retae    {  retj ae,   null }
+macro retge    {  retj ge,   null }
+macro retbe    {  retj be,   null }
+macro retle    {  retj le,   null }
 
-retnae equ jnae null
-retnge equ jnge null
-retnbe equ jnbe null
-retnle equ jnle null
+macro retnc    {  retj nc,   null }
+macro retno    {  retj no,   null }
+macro retnz    {  retj nz,   null }
+macro retnp    {  retj np,   null }
+macro retne    {  retj ne,   null }
+macro retna    {  retj na,   null }
+macro retng    {  retj ng,   null }
+macro retnb    {  retj nb,   null }
+macro retnl    {  retj nl,   null }
 
-retz   equ jz  null
-retnz  equ jnz null
+macro retnae   {  retj nae,  null }
+macro retnge   {  retj nge,  null }
+macro retnbe   {  retj nbe,  null }
+macro retnle   {  retj nle,  null }
 
-retcxz equ jcxz null
-retecxz equ jecxz null
+macro retz     {  retj z,    null }
+macro retnz    {  retj nz,   null }
+
+macro retcxz   {  retj cxz,  null }
+macro retecxz  {  retj ecxz, null }
 ; }}}
 ; }}}
 ; {{{ Vectors and descriptors
@@ -118,31 +123,6 @@ macro offsetdisp
 	end repeat
 	display "h", 10
 }
-CALLTRACE_ACTIVE = 0
-macro call symb ; TODO: SMP?
-{
-if CALLTRACE_ACTIVE
-	local .lbl, .over, .it
-	push rax, rdi, rsi
-	mov rdi, 10h
-	call malloc
-	mov rdi, symb
-	mov [rax], rdi
-	mov rdi, [calltrace_head]
-	mov [rax + 8], rdi
-	mov [calltrace_head], rax
-	pop rax, rdi, rsi
-end if
-	call symb
-if CALLTRACE_ACTIVE
-	push rdi, rsi
-	mov rdi, [calltrace_head]
-	mov rsi, [rdi + 8]
-	mov [calltrace_head], rsi
-	call free
-	pop rdi, rsi
-end if
-}
 ; }}}
 ; {{{ General macro utility
 macro append whut, what
@@ -152,10 +132,70 @@ macro append whut, what
 }
 ; }}}
 ; {{{ Proc macro
-macro proc name, [remaps]
+
+; Interrupt proc
+macro intproc name, [remaps]
+{
+	; Don't assume we have a working stack.
+	common
+		CALLTRACE equ N
+		proc 0, name, remaps
+		restore CALLTRACE
+}
+; Normal proc
+
+macro proc stackspace, name, [remaps]
 {
 	common
 		label name
+		match =N, CALLTRACE \{
+			if stackspace < 0
+				; Forced entry
+				push rbp
+				mov rbp, rsp
+			else if stackspace > 0
+				push rbp
+				mov rbp, rsp
+				sub rsp, stackspace*8
+			end if
+			macro ret \\{
+				if stackspace <> 0
+					leave
+				end if
+				ret
+			\\}
+			macro tailcall addr \\{
+				if stackspace <> 0
+					leave
+				end if
+				jmp addr
+			\\}
+			macro retj c, landing \\{
+				if stackspace <> 0
+					j\\#c leave.\\#landing
+				else
+					j\\#c landing
+				end if
+			\\}
+		\}
+		match =Y, CALLTRACE \{
+			push rbp
+			mov rbp, rsp
+			if stackspace > 0
+				sub rsp, stackspace*8
+			end if
+			macro ret \\{
+				leave
+				ret
+			\\}
+			macro tailcall addr \\{
+				call addr
+				ret
+			\\}
+			macro retj c, landing \\{
+				j\\#c leaving.\\#landing
+			\\}
+		\}
 		local to_restore
 		to_restore equ
 		macro _remap reg, re \{
@@ -225,7 +265,7 @@ macro proc name, [remaps]
 					restore top
 				\\\}
 			\\}
-			purge endproc, remap, _remap
+			purge endproc, remap, _remap, ret, tailcall, retj
 		\}
 	
 }
@@ -256,6 +296,16 @@ macro varb [naem] {
 macro var [naem] {
 	common var_helper 8, naem
 }
+macro var_lock naem {
+	match =N, CFG_UNSAFE \{
+		match =Y, CFG_SMP \\{
+			var_helper 8, naem, value
+		\\}
+		match =N, CFG_SMP \\{
+			var_helper 4, naem, value
+		\\}
+	\}
+}
 macro ivar_helper size, naem, [value]
 {
 	common
@@ -266,6 +316,14 @@ macro ivar_helper size, naem, [value]
 			align size
 			label naem
 			d \# size value
+		\}
+}
+macro ivar_align size {
+	common
+		local ivar_macro
+		append TO_IVAR, ivar_macro
+		macro ivar_macro \{
+			align size
 		\}
 }
 macro ivarq naem, [value] {
@@ -283,6 +341,16 @@ macro ivarb naem, [value] {
 macro ivar naem, [value] {
 	common ivar_helper 8, naem, value
 }
+macro ivar_lock naem {
+	match =N, CFG_UNSAFE \{
+		match =Y, CFG_SMP \\{
+			ivar_helper 8, naem, 0
+		\\}
+		match =N, CFG_SMP \\{
+			ivar_helper 4, naem, 0
+		\\}
+	\}
+}
 ; }}}
 ; {{{ Class macro
 var_offset = 0
@@ -295,7 +363,7 @@ macro class name
 	this equ name
 
 	
-	irp sak, varq, vard, varw, varb, var \{
+	irp sak, varq, vard, varw, varb, var, var_lock \{
 		macro sak naem \\{
 			common
 				append to_restore, \\this\\#\\.\\#\\naem
@@ -303,7 +371,7 @@ macro class name
 				sak name\\#\\.\\#\\naem
 		\\}
 	\}
-	irp sak, ivarq, ivard, ivarw, ivarb, ivar \{
+	irp sak, ivarq, ivard, ivarw, ivarb, ivar, ivar_lock \{
 		macro sak naem, [value]\\{
 			common
 				append to_restore, \\this\\#\\.\\#\\naem
@@ -317,12 +385,12 @@ macro class name
 		\this\#\.\#naem equ name\#\.\#\naem
 		name\#\.\#\naem = val
 	\}
-	macro proc naem, [args]
+	macro proc stackspace, naem, [args]
 	\{
 		\common
 			append to_restore, \this\#\.\#\naem
 			\this\#\.\#\naem equ name\#\.\#\naem
-			proc name\#\.\#\naem, args
+			proc stackspace, name\#\.\#\naem, args
 	\}
 	macro endclass
 	\{
@@ -335,8 +403,8 @@ macro class name
 				restore sak
 			\\\}
 		\\}
-		purge varq, vard, varw, varb, var
-		purge ivarq, ivard, ivarw, ivarb, ivar
+		purge varq, vard, varw, varb, var, var_lock
+		purge ivarq, ivard, ivarw, ivarb, ivar, ivar_lock
 	\}
 
 }
@@ -344,7 +412,6 @@ macro class name
 ; {{{ Quaject macro
 macro quaject name
 {
-	CALLTRACE_ACTIVE = 0
 	local ende, offset, to_restore
 	align 8
 	label name
@@ -361,23 +428,18 @@ macro quaject name
 			\this\#\.\#\naem equ name\#\.\#\naem
 			offset = offset + 8
 	\}
-	macro proc naem, [args]
+	macro proc stackspace, naem, [args]
 	\{
 		\common
 			append to_restore, \this\#\.\#\naem
 			\this\#\.\#\naem equ name\#\.\#\naem
-			proc name\#\.\#\naem, args
+			proc stackspace, name\#\.\#\naem, args
 	\}
 	macro endquaject
 	\{
-		CALLTRACE_ACTIVE = CALLTRACE
 		local I, sak
 		align 8
-		if $ and 3Fh
-			ende = $ or 3Fh + 1
-		else
-			ende = $
-		end if
+		ende = $
 		restore this
 		purge proc, var, endquaject
 		match I, to_restore \\{
@@ -396,18 +458,27 @@ macro quaject name
 macro _puts [string]
 {
 common
-	local .sak, .over
-	push rax, rdi, rsi, r10
-	lea rdi, [.sak]
-	call kputs
-	pop rax, rdi, rsi, r10
-	jmp .over
-.sak:
+	pusha
 forward
-	db string
+	if string in <rax,rbx,rcx,rdx,rdi,rsi,rsp,rbp,r8,r9,r10,r11,r12,r13,r14,r15>
+		mov rdi, string
+		call kprinthex
+		popa
+		pusha
+	else
+		local .sak, .over
+		lea rdi, [.sak]
+		call kputs
+		popa
+		pusha
+		jmp .over
+	.sak:	db string, 0
+	.over:
+	end if
 common
-	db 10, 0
-.over:
+	lea rdi, [debug_newline]
+	call kputs
+	popa
 }
 
 macro _printreg [reg]
@@ -431,6 +502,88 @@ forward
 common
 	popa
 
+}
+
+; }}}
+; {{{ Synchronization
+
+macro spinlock i, place, _reg1, _reg2
+{
+	local reg1, reg2
+	match any, _reg1 \{
+		reg1 equ _reg1
+	\}
+	match any, _reg2 \{
+		reg2 equ _reg2
+	\}
+	match , _reg1 \{
+		reg1 equ a
+	\}
+	match , _reg2 \{
+		reg2 equ d
+	\}
+	match =N, CFG_UNSAFE \{
+		match =saveto->reg, i \\{
+			pushfq
+			pop reg
+			cli
+		\\}
+		match =save, i \\{
+			pushfq
+			match r1=,r2, reg1,reg2 \\\{
+				pop r\\\#r1\\\#x
+				mov [place], e\\\#r1\\\#x
+			\\\}
+			cli
+		\\}
+		match =nosave, i \\{
+			cli
+		\\}
+		; TODO: Check if this actually works.
+		; (Which registers to use is mostly OK, though)
+		match =Y, CFG_SMP \\{
+			match r1=,r2, reg1,reg2 \\\{
+				local .over, .back
+				mov e\\\#r1\\\#x, 10000h
+				lock xadd [place+4], e\\\#r1\\\#x
+				mov e\\\#r2\\\#x, e\\\#r1\\\#x
+				shr e\\\#r2\\\#x, 10h
+				cmp r1\\\#x, r2\\\#x
+				xchg bx, bx
+				je .over
+			.back:	pause
+				mov e\\\#r1\\\#x, [place+4]
+				cmp r1\\\#x, r2\\\#x
+				jne .back
+			.over:
+			\\\}
+		\\}
+	\}
+}
+macro spinunlock i, place
+{
+	match =N, CFG_UNSAFE \{
+		local .over
+		match =saveto->reg, i \\{
+			bt reg, 9
+			jnc .over
+			sti
+		.over:
+		\\}
+		match =save, i \\{
+			mov eax, [place]
+			bt eax, 9
+			jnc .over
+			sti
+		.over:
+		\\}
+		match =nosave, i \\{
+			sti
+		\\}
+		match =Y, CFG_SMP \\{
+			inc word [place+4]
+		\\}
+	\}
 }
 ; }}}
 ; vim: ts=8 sw=8 syn=fasm

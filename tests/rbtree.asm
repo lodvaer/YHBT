@@ -1,6 +1,6 @@
 
 ;! Check that it rotates correctly
-proc rbtree_rotate
+proc 0, rbtree_rotate
 	lea rdi, [.tree]
 	mov rsi, [rdi + rbtree.TREE]
 	push rsi
@@ -18,6 +18,7 @@ proc rbtree_rotate
 
 	assert rdi, e, rsi, "Tests: rbtree_rotate 0: FAILED"
 
+	_puts "RBTree Rotate: Win!"
 	ret
 
 .tree:
@@ -41,7 +42,7 @@ dq 0, HIGH_HALF + .left, HIGH_HALF + .right, 5, 55h
 endproc
 
 ;! Check that it balances correctly.
-proc rbtree_balance
+proc 0, rbtree_balance
 	xor rdi, rdi
 	call rbtree.new
 	mov rbx, rax
@@ -59,28 +60,31 @@ proc rbtree_balance
 
 	mov rdi, rbx
 	call rbtree.first
-	call .black_depth
+	call tests._rbtree_black_depth
 	push rax
 
 	mov rdi, rbx
 	call rbtree.last
-	call .black_depth
+	call tests._rbtree_black_depth
 	push rax
 
 	mov rdi, rbx
 	mov rsi, 10h
 	call rbtree.search
 	mov rdi, rdx
-	call .black_depth
+	call tests._rbtree_black_depth
 
 	pop rdx
 	pop rdi
 	assert rdx, e, rdi, "Tests: rbtree_balance: first black-depth does not equal last."
 	assert rdx, e, rax, "Tests: rbtree_balance: 10th black-depth does not equal first or last."
 
+	_puts "RBTree Balance: Woho!"
 	ret
 
-.black_depth:
+endproc
+
+proc 0, _rbtree_black_depth
 	xor rax, rax
 @@:	test qword [rdi + rbtree.PARENT], 1
 	jz .over
@@ -92,7 +96,6 @@ proc rbtree_balance
 	inc rax ; Just for it to truly live up to it's name.
 	ret
 endproc
-
 append tests.torun, this.rbtree_rotate
 append tests.torun, this.rbtree_balance
 ; vim: ts=8 sw=8 syn=fasm

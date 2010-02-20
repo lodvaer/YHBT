@@ -1,6 +1,6 @@
 ;; Interrupts.
 
-
+CALLTRACE equ N
 
 append TO_INIT_64, ints.init
 macro ints.init {
@@ -40,7 +40,7 @@ macro ints.init {
 include 'kernel/faults/main.asm'
 
 class ints
-	proc null
+	intproc null
 		push rax
 		mov al, 20h
 		out 20h, al
@@ -49,4 +49,6 @@ class ints
 		iretq
 	endproc
 endclass
+
+restore CALLTRACE
 ; vim: ts=8 sw=8 syn=fasm

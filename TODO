@@ -1,9 +1,6 @@
 ### TODO, semi-in-order
 
 # kernel/mm:
-X- paddr_get
-X- paddr_free
-X- palloc
 -- pfree
 
 And the processes, minus the VFS
@@ -11,8 +8,6 @@ After We've gotten to where processes can run in usermode, implement the VFS.
 
 Then the true terminal, and make the processes and kputs use it.
 And after that, /proc
-
-After we got a terminal running, we call it presentable, and go public or something.
 
 # Whenever:
 -- Go over all the code and move branches around to make their likelihood coincide
@@ -196,30 +191,3 @@ driver_code:
 
 #end
 In kernel mode it is of course much simpler, as the message is read from the calling thread directly.
-
-
-### After I got a running system (read: a year or two into the future)
-# Parsec-clone in assembly
-No ideas yet.
-
-Most of the creative work will go into defining the data structures, methinks.
-
-# My own LISP-dialect with a incremental compiler using said clone
-
-Type-safety:
-
-Currying.
-
-Quantum superpositions:
-
-(define (+ n) (| n (\ (x) (+ (#+ n x)))))
-
-Where (#+ 5 5) is the primitive pluss, | is the quantum OR, and \ is lambda.
-
-This makes it possible to do ((+ 5 5) 5). With a sparcle of syntactic shugar for currying,
-this becomes (+ 5 5 5), and functions with variable argument size are thus definable.
-
-This effectively represents the normal LISP + which is able to take infinite arguments,
-because it could either be a number or a function taking a new argument, which, when
-expeanded, could create an infinite chain of (#+ (#+ (#+ (#+ ...) 5) 5) 5).
-

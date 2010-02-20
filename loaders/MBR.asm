@@ -58,7 +58,7 @@ start:
 	mov bx, 1000h
 
 	mov ah, 02h	; Read
-	mov al, 20h	; 16 KiB
+	mov al, 30h	; 24 KiB
 			; From
 	mov ch, 0	; Cylynder 0
 	mov cl, 2	; Sector 2
@@ -67,7 +67,6 @@ start:
 
 	int 13h		; GO
 	jc fail
-	
 	mov byte [msg.fail], '3'
 	jmp 0:1000h
 

@@ -1,4 +1,4 @@
-;! Queue tests
+;; Queue tests
 
 
 proc 0, queue_proc_putAndGet

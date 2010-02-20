@@ -1,7 +1,5 @@
 ; The faults and their handlers.
 
-CALLTRACE_ACTIVE = 0
-
 the_faults fix divide, debug, nmi, breakpoint, overflow, boundscheck,\
 	  invalid_opcode, cocpu_unavail, doublefault, cocpu_overrun,  \
 	  invalid_tss, segfault, stack, genprot, pagefault, reserved,  \
@@ -23,7 +21,7 @@ macro faults.init {
 }
 macro default_fault_proc name
 {
-	proc name
+	intproc name
 	xchg bx, bx
 	if name in <fault_has_error>
 	else
@@ -34,7 +32,7 @@ macro default_fault_proc name
 	jmp this.default_action
 }
 class faults
-	proc default_action	
+	intproc default_action	
 		pusha ; Pusha moves the stack 16*8 down.
 		call kputs ; Message
 
@@ -230,7 +228,5 @@ class faults
 		db "1F: Reserved.", 10, 0
 	endproc
 endclass
-
-CALLTRACE_ACTIVE = CALLTRACE
 
 ; vim: ts=8 sw=8 syn=fasm

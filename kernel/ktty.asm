@@ -1,38 +1,37 @@
-; Kernel TTY-functions.
+;; Kernel TTY-functions.
 
 class ktty
 	ivar write, (HIGH_HALF + ktty.e_write)
 	ivarb colour, 05Fh
-	varb spinlock
 	varb x
 	varb y
 
-	;; Internal kernel puts-function
+	;! Internal kernel puts-function
 	;: *0Char str -> IO ()
 	;. write
 	;= kputs
-	proc kputs
+	proc 0, kputs
 	kputs = this.kputs
 		xor eax, eax
 		call strlen
 		mov rsi, rax
-		jmp qword [this.write]
+		tailcall qword [this.write]
 	endproc
-	;; Print an address
+	;! Print an address
 	;: Int addr -> IO ()
 	;. write
 	;= kprintaddr
-	proc kprintaddr
+	intproc kprintaddr
 	kprintaddr = this.kprintaddr
 		; As there is no point unless there's a symbol table loaded,
 		; fallthrough to the next, which is:
 	endproc
-	;; Print a number in hexadecimal
+	;! Print a number in hexadecimal
 	;: Int n -> IO ()
 	;- di, si
 	;. write
 	;= kprinthex
-	proc kprinthex, 14->CNT, 15->NUM
+	proc 0, kprinthex, 14->CNT, 15->NUM
 	kprinthex = this.kprinthex
 	varb hexbuf ; Stack, you idiot.
 		push rCNT, rNUM
@@ -68,11 +67,11 @@ class ktty
 	.str:	db "0x"
 	endproc
 	
-	;; Write a byte to the screen
+	;! Write a byte to the screen
 	;: Word <Char attr:Char chr> -> IO ()
 	;- a, d
 	; the e_ is for early.
-	proc e_putc
+	proc 0, e_putc
 		cmp dil, 10
 		je .newline
 
@@ -86,7 +85,7 @@ class ktty
 		add rax, rdx
 		shl edx, 2
 		add rax, rdx
-		
+
 		mov [rax], di
 		inc byte [this.x]
 		cmp byte [this.x], 80
@@ -103,12 +102,12 @@ class ktty
 		mov byte [this.y], 0
 		ret
 	endproc
-	;; Write a byte to the early tty.
+	;! Write a byte to the early tty.
 	;: *Char str -> Int size -> IO ()
 	;- di, si, r10
 	;. ktty.e_putc
 	; A guaranteed working write to print something on the screen.
-	proc e_write
+	proc 0, e_write
 		cmp rsi, 0
 		rete
 		mov r10, rdi

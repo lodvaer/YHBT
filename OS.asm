@@ -2,6 +2,7 @@ include 'OS.cfg'
 include 'include/macros.h'
 include 'include/cpu.h'
 include 'include/constants.h'
+include 'include/mm.h'
 
 TO_INIT_64 equ
 TO_INIT_32 equ
@@ -16,7 +17,7 @@ use64
 
 ; The order of inclusion matters _a lot_.
 
-include 'lib/assert.asm'
+include 'lib/assert.asm'   ; Needed by mostly everything.
 include 'lib/string.asm'
 include 'lib/debug.asm'
 include 'lib/rbtree.asm'
@@ -31,6 +32,8 @@ include 'kernel/ktty.asm'
 include 'kernel/ints.asm'
 include 'kernel/alarm.asm' ; Needs kernel/ints
 include 'lib/stdlib.asm'   ; Needs kernel/mm
+include 'lib/queue.asm'    ; Needs stdlib
+include 'lib/mvar.asm'     ; Needs queue
 
 
 match =Y, CFG_TTY_TEXT {
@@ -42,7 +45,6 @@ match =Y, CFG_TTY_VESA {
 match =Y, CFG_VFS {
 ;	include 'servers/vfs.asm'
 }
-CALLTRACE_ACTIVE = 0
 kmain:
 	; Clean the init-code and initialize
 	; the vars to 0
@@ -51,48 +53,56 @@ kmain:
 	mov edx, _END - _VARS
 	call memset
 	; Only after we have cleared memory is it safe to enable interrupts,
-	; because stuff like the clock needs it's variables zeroed.
+	; because stuff like the clock needs its variables zeroed.
 	sti
 
 match =Y, CFG_TESTRUN {
 	include 'tests/main.asm'
 }
-
-CALLTRACE_ACTIVE = CALLTRACE
 	lea rax, [.t0]
 	push rax
 	jmp proc.init
 .t0:	; We are here in thread 0.
+	call mvar.newEmpty
+	mov [whut], rax
+
 	call proc.fork
 	cmp rax, 0
-	je .child
+	je .child1
 
-.parent:
-	_puts "The parent is alive!"
-	_printreg rax
-	lea r14, [A]
-@@:	mov rdi, r14
-	cli
-	call kputs
-	sti
-	hlt
-	jmp @b
-
-.child:
-	_puts "The child is here!"
-	lea r15, [B]
-@@:	mov rdi, r15
-	cli
-	call kputs
-	sti
-	hlt
+	xor rbp, rbp
+	mov rbx, 0
+@@:	dec rbx
+	mov rsi, rbx
+	mov rdi, [whut]
+	call mvar.put
 	jmp @b
 
 
-A:	db 'A', 0
-B:	db 'B', 0
+.child1:
+	call proc.fork
+	cmp rax, 0
+	je .child2
+	xor rbp, rbp
+	sub rsp, 200h
+	mov rbx, 0
+@@:	inc rbx
+	mov rdi, [whut]
+	mov rsi, rbx
+	call mvar.put
+	jmp @b
+
+.child2:
+	xor rbp, rbp
+	sub rsp, 400h
+@@:	xchg bx, bx
+	mov rdi, [whut]
+	call mvar.take
+	_puts "Got ", rax
+	jmp @b
 
 align 64 ; So it's on a different cache line.
+whut:	dq 0
 _IVARS:
 match I, TO_IVAR {
 	irp do_ivar, I \{

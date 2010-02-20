@@ -1,6 +1,3 @@
-; Calltracing in initialization code is not good
-CALLTRACE_ACTIVE = 0
-
 ;; Initialize CPU
 use16
 	cli

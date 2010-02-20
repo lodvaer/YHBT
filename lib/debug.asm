@@ -1,12 +1,141 @@
 ; Shared strings:
 debug_arrow:
 	db " -> ", 0
+debug_back_arrow:
+	db " <- ", 0
 debug_ground:
 	db "|", 10, 0
 debug_joiner:
 	db ":", 0
 debug_newline:
 	db 10, 0
+
+
+;! Print an MVar
+;: MVar a -> IO ()
+debug_print_mvar:
+	push rbx
+	mov rbx, rdi
+	_puts "MVar:"
+	mov rdi, [rbx + mvar.SPINLOCK]
+	call kprinthex
+	lea rdi, [debug_newline]
+	call kputs
+	mov rdi, [rbx + mvar.CONTENT]
+	call kprinthex
+	lea rdi, [debug_newline]
+	call kputs
+	mov rdi, [rbx + mvar.QUEUE_STATUS]
+	call kprinthex
+	lea rdi, [debug_newline]
+	call kputs
+	mov rdi, [rbx + mvar.QUEUE_HEAD]
+	call kprinthex
+	lea rdi, [debug_newline]
+	call kputs
+	mov rdi, [rbx + mvar.QUEUE_TAIL]
+	call kprinthex
+	_puts 10, "MVar reschedule queue:"
+	mov rdi, [rbx + mvar.QUEUE_HEAD]
+	call debug_print_ll
+	mov rdi, rbx
+	pop rbx
+	ret
+
+
+;! Print the pqueue
+debug_print_pqueue:
+	_puts "PQueue:"
+	push rbx, r15
+	mov ecx, MSR.KGS
+	rdmsr
+	shl rdx, 32
+	mov ebx, eax
+	or  rbx, rdx
+
+	mov r15, rbx
+.back:
+	mov rdi, [r15 + q_thread.prev]
+	call kprinthex
+	lea rdi, [debug_back_arrow]
+	call kputs
+	mov rdi, r15
+	call kprinthex
+	lea rdi, [debug_arrow]
+	call kputs
+	mov rdi, [r15 + q_thread.next]
+	call kprinthex
+	lea rdi, [debug_newline]
+	call kputs
+	mov r15, [r15 + q_thread.next]
+	cmp r15, rbx
+	jne .back
+	pop rbx, r15
+	ret
+	
+;! Print a thread
+debug_print_thread:
+	push rbx
+	test rdi, rdi
+	jnz .over
+	
+	mov ecx, MSR.KGS
+	rdmsr
+	shl rdx, 32
+	mov edi, eax
+	or  rdi, rdx
+.over:
+	mov rbx, rdi
+	lea rdi, [.h]
+	call kputs
+	mov rdi, rbx
+	call kprinthex
+
+	lea rdi, [.next]
+	call kputs
+	mov rdi, [rbx + q_thread.next]
+	call kprinthex
+	lea rdi, [.prev]
+	call kputs
+	mov rdi, [rbx + q_thread.prev]
+	call kprinthex
+
+	lea rdi, [.rip]
+	call kputs
+	mov rdi, [rbx + q_thread.rip]
+	call kprinthex
+	lea rdi, [.rsp]
+	call kputs
+	mov rdi, [rbx + q_thread.rsp]
+	call kprinthex
+	
+	lea rdi, [.pid]
+	call kputs
+	mov rdi, [rbx + q_thread.pid]
+	call kprinthex
+	lea rdi, [.tid]
+	call kputs
+	mov rdi, [rbx + q_thread.tid]
+	call kprinthex
+
+	lea rdi, [.fds]
+	call kputs
+	lea rdi, [rbx + q_thread.fds]
+	call debug_print_rbtree
+
+	pop rbx
+	ret
+.h:	db "q_thread ", 0
+.next:	db 10, "next: ", 0
+.prev:	db ", prev: ", 0
+.rip:	db 10, "rip:  ", 0
+.rsp:	db ", rsp:  ", 0
+.pid:	db 10, "pid:  ", 0
+.tid:	db ", tid:  ", 0
+.fds:	db 10, "file descriptors:", 10, 0
+
+
+
 
 ;! Print an RBTree
 ;: RBTree -> IO ()
@@ -191,10 +320,17 @@ debug_print_ptable:
 
 ;! Print the current alarms
 ;: IO ()
-;. kprinthet, kputs
+;. debug_print_ll
 debug_print_alarms:
+	_puts 10, "Alarms:"
+	mov rdi, [alarm.list]
+
+;! Print a linked list with 3 elements, skipping the 3rd.
+;: [a:b:c] -> IO ()
+;. kprinthex, kputs
+debug_print_ll3:
 	push rbx
-	mov rbx, [alarm.list]
+	mov rbx, rdi
 .loop:
 	cmp rbx, 0
 	je .ground
@@ -213,7 +349,28 @@ debug_print_alarms:
 
 	mov rbx, [rbx + 18h]
 	jmp .loop
+
+.ground:
+	lea rdi, [debug_ground]
+	call kputs
+	pop rbx
+	ret
+;! Print
+debug_print_ll:
+	push rbx
+	mov rbx, rdi
+.loop:
+	cmp rbx, 0
+	je .ground
 	
+	mov rdi, [rbx]
+	call kprinthex
+
+	lea rdi, [debug_arrow]
+	call kputs
+
+	mov rbx, [rbx + 8h]
+	jmp .loop
 
 .ground:
 	lea rdi, [debug_ground]
@@ -297,10 +454,31 @@ debug_print_mallocs:
 	db "Mallocs: ", 10, 0
 
 
-if CALLTRACE
+match =Y, CALLTRACE {
+
+debug_print_calltrace:
+	push r15
+
+	lea rdi, [.header]
+	call kputs
+
+	mov r15, rbp
+	test r15, r15
+	jz .done
+.loop:
+	mov rdi, [r15 + 8]
+	call kprintaddr
+	lea rdi, [debug_newline]
+	call kputs
+	mov r15, [r15]
+	test r15, r15
+	jnz .loop
+.done:
+	pop r15
+	ret
 
 	var calltrace_head
-debug_print_calltrace:
+;debug_print_calltrace:
 	push r15
 	lea rdi, [.header]
 	call kputs
@@ -309,7 +487,7 @@ debug_print_calltrace:
 	cmp r15, 0
 	je .over
 
-.loop:
+;.loop:
 	mov rdi, [r15]
 	call kprintaddr
 	mov r15, [r15 + 8]
@@ -324,8 +502,9 @@ debug_print_calltrace:
 .header:
 	db "Calltrace: ", 10, 0
 
-else
+}
+match =N, CALLTRACE {
 	debug_print_calltrace = null
-end if
+}
 
 ; vim: ts=8 sw=8 syn=fasm

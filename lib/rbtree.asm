@@ -1,4 +1,4 @@
-;! A red-black tree implementation.
+;; A red-black tree implementation.
 
 ;: RBTree A :: (*Proc callback | Null) : *RBNode A tree
 ;: RBColor  :: RB_RED | RB_BLACK
@@ -22,10 +22,10 @@ class rbtree
 	const WHAT,    20h
 
 	;! Create a new RBTree
-	;: *Proc callback -> RBTree
+	;: Maybe (*Proc callback) -> RBTree
 	;- rdi
 	;. malloc
-	proc new
+	proc 0, new
 		push rdi
 		mov rdi, 10h
 		call malloc
@@ -38,7 +38,7 @@ class rbtree
 
 	;! Find the first node in a RBTree
 	;: RBTree A -> A:Key:RBNode A
-	proc first
+	proc 0, first
 		mov rdi, [rdi + this.TREE]
 		test rdi, rdi
 		jz .fail
@@ -59,7 +59,7 @@ class rbtree
 
 	;! Find the last node in a RBTree
 	;: RBTree A -> A:Key:RBNode A
-	proc last
+	proc 0, last
 		mov rdi, [rdi + this.TREE]
 		test rdi, rdi
 		jz .fail
@@ -80,7 +80,7 @@ class rbtree
 	
 	;! Find the next node
 	;: RBNode A -> RBNode A
-	proc next
+	proc 0, next
 		assert rdi, ne, [rdi + this.PARENT], "rbtree.next: Incest!"
 		
 		mov rsi, [rdi + this.RIGHT]
@@ -113,7 +113,7 @@ class rbtree
 
 	;! Insert a new item into the tree
 	;: RBTree A -> (Int key | ? key) -> A -> IO ()
-	proc insert
+	proc 0, insert
 		push rdi, rsi
 		mov edi, 28h
 		;*+ rdx
@@ -132,7 +132,8 @@ class rbtree
 		jz .i_get
 		;[TODO]
 	.c_get:
-
+		_puts "TODO: rbtree.insert.c_get"
+		jmp panic
 	align 10h
 	.i_get: ;[/TODO]
 		cmp rsi, [rcx + this.KEY]
@@ -163,7 +164,6 @@ class rbtree
 	.ins_left:
 		mov [rcx + this.LEFT], rax
 
-
 	.balance:
 		mov [rax + this.PARENT], rcx ; As a red node.
 
@@ -172,7 +172,6 @@ class rbtree
 		push rPARENT, rGPARENT
 		mov rPARENT, rcx
 		jmp .into2
-		;[TODO]
 	.loop:
 		cmp rPARENT, [rGPARENT + this.RIGHT]
 		je .right
@@ -239,8 +238,7 @@ class rbtree
 		pop rbx, r15
 		ret
 
-	.root:  ;[/TODO]
-		mov [rdi + this.TREE], rax
+	.root:	mov [rdi + this.TREE], rax
 		mov qword [rax + this.PARENT], 1
 		ret
 	endproc
@@ -248,7 +246,7 @@ class rbtree
 	;! Rotate the node left.
 	;: RBTree A -> RBNode A -> IO ()
 	;- ax, si, r10, r11
-	proc rotate_left, di->ROOT, si->NODE, 10->RIGHT, 11->PARENT
+	proc 0, rotate_left, di->ROOT, si->NODE, 10->RIGHT, 11->PARENT
 		assert rROOT, ne, 0, "rbtree.rotate_left: null given as root."
 		assert rNODE, ne, 0, "rbtree.rotate_left: null given as node."
 
@@ -295,7 +293,7 @@ class rbtree
 
 	;! Rotate the node right.
 	;: RBTree A -> RBNode A -> IO ()
-	proc rotate_right, di->ROOT, si->NODE, 10->LEFT, 11->PARENT
+	proc 0, rotate_right, di->ROOT, si->NODE, 10->LEFT, 11->PARENT
 		assert rROOT, ne, 0, "rbtree.rotate_right: null given as root."
 		assert rNODE, ne, 0, "rbtree.rotate_right: null given as node."
 
@@ -342,8 +340,7 @@ class rbtree
 	;! Search after an entry in the tree.
 	;: RBTree A -> (Int key | ? key) -> A:RBNode A
 	;- rdx, rdi
-	; TODO: Semaphore on the whole tree?
-	proc search
+	proc 0, search
 		mov rdx, [rdi + this.CALLBACK]
 
 		cmp rdx, 0

@@ -1,4 +1,5 @@
-;;
+;; 
+
 append TO_INIT_64, alarm.init
 
 macro alarm.init {
@@ -21,11 +22,11 @@ class alarm
 	const PREV,  10h
 	const NEXT,  18h
 	
-	;; Interrupt handler
+	;! Interrupt handler
 	;: IO ()
 	; Consideration list:
-	; SMP
-	proc tick
+	; SMP: One alarm list per CPU.
+	intproc tick
 		cli
 		push rax
 		mov al, 20h
@@ -57,13 +58,12 @@ class alarm
 		iretq
 	endproc
 
-	;; Schedule a procedure to be called when time ticks has passed
+	;! Schedule a procedure to be called when time ticks has passed
 	;: Int time -> *Proc procedure -> IO Int id
 	;- rax, rdx, rdi, rsi, r10, r11
 	; TODO:
 	;  - Anything better than an O(n) scheduler?
-	;  - Semaphore
-	proc schedule
+	proc 0, schedule
 		assert rsi, ne, 0, "alarm.schedule: rsi == 0!"
 		assert rdi, le, 267840000, "alarm.schedule: Scheduling for longer than a month!"
 
@@ -111,24 +111,23 @@ class alarm
 		ret
 	endproc
 
-	;; Deschedule an alarm
+	;! Deschedule an alarm
 	;: Int id -> IO ()
 	;- rsi, rax
-	; TODO:
-	;  - Semaphore
-	proc deschedule
+	proc 0, deschedule
 		mov rsi, [rdi + this.NEXT] ; rsi <- NEXT(rdi)
-		mov rax, [rdi + this.LEFT]
-		add [rsi], rax ; TIME_LEFT(NEXT(rdi)) += TIME_LEFT(rdi)
 		mov rax, [rdi + this.PREV]
-
 		mov [rax + this.NEXT], rsi ; NEXT(PREV(rdi)) <- NEXT(rdi)
-
 		cmp rsi, 0
-		je  free
-		
+		je  .free
+
+		mov rax, [rdi + this.LEFT]
+		add [rsi + this.LEFT], rax ; TIME_LEFT(NEXT(rdi)) += TIME_LEFT(rdi)
+
 		mov [rsi + this.PREV], rax ; PREV(NEXT(rdi)) <- PREV(rdi)
-		jmp free
+		tailcall free
+	.free:	nop
+		tailcall free
 	endproc
 endclass
 

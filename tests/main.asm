@@ -1,4 +1,4 @@
-;! Test framework
+;; Test framework
 
 jmp tests.over
 tests.torun equ
@@ -6,6 +6,8 @@ tests.torun equ
 class tests
 	include 'malloc.asm'
 	include 'rbtree.asm'
+	include 'mvar.asm'
+	include 'queue.asm'
 endclass
 
 tests.over:

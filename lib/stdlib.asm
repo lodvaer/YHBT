@@ -34,6 +34,7 @@ macro malloc.init {
 ivar malloc.base, HIGH_HALF + MALLOC_ORIG
 ivar malloc.max,  MALLOC_MAX
 var malloc.current
+var_lock malloc.lock
 
 ;! Allocate memory before the init routines are done.
 ;: Int size -> *Mem
@@ -44,15 +45,32 @@ preinit_malloc:
 	sub [malloc.max], rdi
 	ret
 
+;! Allocate memory aligned by 10h
+;: Int size -> *Mem
+;- rdi, rsi
+proc 0, malloc_a10h
+	add rdi, 8
+	call malloc
+	test eax, 0Fh
+	retz
+	mov rsi, [rax - 8]
+	sub rsi, 8
+	mov qword [rax - 8], 0
+	mov [rax], rsi
+	add rax, 8
+	ret
+endproc
+
 ;! Allocate memory
 ;: Int size -> *Mem
 ;- rdi, rsi
-; rdi should (if not must) be a multiple of 8
-; to not screw up the alignment.
-malloc:
-	assert rdi, ne, 0, "malloc: Called with 0."
-	assert_t rdi, z, 7, "malloc: 8-byte aligned, please."
+; rdi must be a multiple of 8 to not screw up the alignment.
+; TODO: Make one that isn't teh suck.
+proc 0, malloc
 	push rbx, r15
+	spinlock save, .lock, a, b
+	assert rdi, ne, 0, "malloc: Called with 0."
+	assert_t rdi, z, 07h, "malloc: 8-byte aligned, please."
 	xor r15, r15
 	mov rbx, [.base]
 	mov rsi, [.current]
@@ -80,9 +98,10 @@ align 10h
 	jmp .loopy
 align 10h
 .win_eq:		; Exact size!
-	;mov [.current], rsi
+;	mov [.current], rsi
 	bts rax, 63	; Taken
 	mov [rbx + rsi], rax	; It's the exact size, so don't bother
+	spinunlock save, .lock
 	lea rax, [rbx + rsi+8]	; with splitting.
 	pop rbx, r15
 	ret
@@ -96,9 +115,10 @@ align 10h
 	add rsi, 8
 	
 	mov [rbx + rsi], rax
-	;mov [.current], rsi
+;	mov [.current], rsi
 	sub rsi, rdi
 	sub rsi, 8
+	spinunlock save, .lock
 	lea rax, [rbx + rsi+8]
 	pop rbx, r15
 	ret
@@ -114,9 +134,11 @@ align 10h
 	; TODO:
 	;	Allocate another page
 	;	Try again until there are no more pages.
+	;spinunlock save, .lock
 	mov rax, -1
 	pop rbx, r15
 	ret
+endproc
 
 ;! Free a previously allocated pointer.
 ;: *Mem -> Null
@@ -124,6 +146,9 @@ align 10h
 free:
 	btr qword [rdi - 8], 63
 	ret
+macro _free what {
+	btr qword [what - 8], 63
+}
 ; Unimplemented:
 a64l:
 l64a:
@@ -166,14 +191,38 @@ posix_openpt:
 ptsname:
 putenv:
 qsort:
+
+var rand.state1
+var rand.state2
+; TODO: "Carefully choose" this constant to something better.
+RAND_CONST equ 0836DFA444599DDE4h
+;! Simple multiply-with-carry prng
+;: IO Int
+;- rdx
 rand:
+	mov rax, RAND_CONST
+	mul qword [.state2]
+	add rdx, [.state1]
+	adc rax, 0
+	mov [.state1], rax
+	mov [.state2], rdx
+	mov rax, rdx
+	ret
+
 rand_r:
 random:
 realloc:
 realpath:
 setenv:
 setstate:
+
+;! Seed the random number generator
+;: Int -> Int -> IO ()
 srand:
+	mov [rand.state1], rdi
+	mov [rand.state2], rsi
+	ret
+
 srand48:
 srandom:
 strtod:

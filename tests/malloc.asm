@@ -1,6 +1,7 @@
-;! Tests that verify that malloc is working properly.
+;; Tests that verify that malloc is working properly.
 
-proc malloc
+;! Test malloc
+proc 0, malloc
 	mov rdi, 8
 	call malloc
 	assert rax, ne, -1, "Tests: malloc 1: FAILED"
@@ -28,6 +29,7 @@ proc malloc
 	call malloc
 	assert rax, ne, -1, "Tests: malloc 3: FAILED"
 
+	_puts "Malloc: OK!"
 	ret
 endproc
 
