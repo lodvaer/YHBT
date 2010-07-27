@@ -78,6 +78,9 @@ quaject q_thread
 	;.addr:	jmp 0 ; proc.kill
 	;endproc
 
+	;! Resume this thread.
+	; This assumes 5 usable quadwords on the stack for use with the iretq,
+	; normally left there by 'q_thread.suspend'.
 	intproc resume
 		; Set up the iretq stack.
 		mov rax, [this.rip]
@@ -127,13 +130,10 @@ quaject q_thread
 		mov r11, [this.r11]
 		mov rax, [this.rax]
 
-		lea r13, [0]
-
 		iretq
 	endproc
 
 	;! Suspend the current thread and call the next.
-	;
 	; This assumes the stack looks like: (reverse)
 	; * Int address it got called from (ignored)
 	; * Int rax content

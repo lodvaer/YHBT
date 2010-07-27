@@ -1,3 +1,5 @@
+;; Assert macros.
+
 macro assert_h method, reg, cond, to, mesg
 {
 if ASSERT

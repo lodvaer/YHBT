@@ -1,3 +1,4 @@
+;; Test RBTree functionality.
 
 ;! Check that it rotates correctly
 proc 0, rbtree_rotate
@@ -84,6 +85,7 @@ proc 0, rbtree_balance
 
 endproc
 
+;! Get the depth of a node in the tree.
 proc 0, _rbtree_black_depth
 	xor rax, rax
 @@:	test qword [rdi + rbtree.PARENT], 1

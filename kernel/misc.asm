@@ -1,3 +1,6 @@
+;; Various helper routines and such.
+
+;! Panic.
 panic:
 	cli
 	lea rax, [ktty.e_write]
@@ -29,21 +32,30 @@ idle_sleep:
 @@:	hlt
 	jmp @b
 
+;! Return true.
+;: Bool
 true:
 	mov rax, 1
 	ret
 
+;! Return false
+;: Bool
 false:
 	xor rax, rax
 	ret
 
+;! Return an error
+;: Error
 error:
 	mov rax, -1
 	ret
 
+;! Do nothing but return.
+;: ()
 null:
 	rep ret
 
+;! Leave the current stack frame, returning something.
 leaving:
 .true:
 	mov rax, 1

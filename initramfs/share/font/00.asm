@@ -1,3 +1,4 @@
+;; Font file.
 
 ; Each set of characters takes 2.75 KiB.
 

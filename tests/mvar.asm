@@ -1,5 +1,6 @@
 ;; MVar tests
 
+;! Test that tryTake works.
 proc 0, mvar_tryTake
 	lea rdi, [.take]
 	call mvar.tryTake
@@ -11,6 +12,7 @@ align 10h
 mvar.static_new mvar_tryTake.take, 55h
 endproc
 
+;! Test that tryPut works
 proc 0, mvar_tryPut
 	lea rdi, [.put]
 	mov esi, 55h
@@ -22,6 +24,7 @@ align 10h
 mvar.static_newEmpty mvar_tryPut.put
 endproc
 
+;! Test that both tryTake and tryPut works.
 proc 0, mvar_tryBoth
 	push rbx
 	mov rbx, 0DEADBABE1550DEADh

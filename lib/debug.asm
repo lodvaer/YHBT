@@ -1,3 +1,5 @@
+;; Debug utilities of various functionality.
+
 ; Shared strings:
 debug_arrow:
 	db " -> ", 0

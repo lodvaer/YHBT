@@ -1,3 +1,5 @@
+;; Various system tales and such.
+
 append TO_INIT_64, tables.init
 macro tables.init
 {

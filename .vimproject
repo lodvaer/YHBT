@@ -21,7 +21,6 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
    proc.asm
    procfs.asm
    q_thread.asm
-   scheduler.asm
   }
   faults=faults {
    main.asm
@@ -34,6 +33,7 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
   cpu.h
   fcntl.h
   macros.h
+  mm.h
   unistd.h
  }
  drivers=drivers {
@@ -41,8 +41,18 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
    text.asm
   }
  }
- servers=servers {
-  vfs.asm
+ initramfs=initramfs {
+  share=share {
+   font=font {
+    00.asm
+   }
+  }
+  src=src {
+   init=init {
+    Makefile
+    main.asm
+   }
+  }
  }
  init=init {
   main.asm
@@ -50,15 +60,11 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
  lib=lib {
   assert.asm
   debug.asm
+  mvar.asm
+  queue.asm
   rbtree.asm
   stdlib.asm
   string.asm
-  unistd.asm
- }
- share=share {
-  font=font {
-   00.asm
-  }
  }
  loaders=loaders {
   COMBOOT.asm
@@ -68,9 +74,13 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
  tests=tests {
   main.asm
   malloc.asm
+  mvar.asm
+  queue.asm
   rbtree.asm
  }
  tools=tools {
+  YHBT.py
+  doc.py
   fas.py
   lookup.py
  }

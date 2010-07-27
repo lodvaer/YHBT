@@ -1,3 +1,5 @@
+;; COMBOOT loader for use with PXELINUX booting over network.
+
 include "include/boot.h"
 org 100h
 COMBOOT:

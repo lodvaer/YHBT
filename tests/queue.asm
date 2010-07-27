@@ -1,6 +1,7 @@
 ;; Queue tests
 
 
+;! Test put and get of the queue proc interface.
 proc 0, queue_proc_putAndGet
 	mov r14, 0DEADC0FFEEEEEEEEh
 	mov r15, 0DEADBABE1550DEADh
@@ -50,6 +51,7 @@ proc 0, queue_proc_putAndGet
 	ret
 endproc
 
+;! Test put and get of the queue macro interface.
 proc 0, queue_macro_putAndGet
 	mov r14, 0DEADC0FFEEEEEEEEh
 	mov r15, 0DEADBABE1550DEADh

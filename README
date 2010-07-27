@@ -25,7 +25,7 @@ Have fun.
 
 /kernel		Kernel internals.
 /kernel/<sub>	Kernel internal <sub> where <sub> is a module with
-		enough code to warrant it's own folder.
+		enough code to warrant its own folder.
 /include	Header files, only stuff that doesn't compile to anything.
 /drivers	Programs/modules that provide interfaces to the devices.
 /servers	Programs/modules that provide functionality not specific to hardware.
@@ -48,11 +48,12 @@ macro thing.init_16 {
 }
 ; Same with 32 (for whatever reason you need that) and 64.
 
-class thing	; Start a class of things. Note, there is no object-orientation here, it's just for
-		; grouping. The dot it used to separate groups from their contents, while the _
-		; is used to separate words in the function names. This removes an ambiguity
-		; in normal C-style function naming and grouping, although nobody really had a
-		; problem with it.
+class thing	; Start a class of things. Note, there is no object-orientation
+		; here, it's just for grouping. The dot it used to separate
+		; groups from their contents, while the _ is used to separate
+		; words in the function names. This removes an ambiguity
+		; in normal C-style function naming and grouping, although
+		; nobody really had a problem with it.
 
 	; Create a 64-bit variable that will contain 0 after all the init-code has ran.
 	; This is to be able to overlap init-code and static variables, reducing needed space.
@@ -65,7 +66,7 @@ class thing	; Start a class of things. Note, there is no object-orientation here
 	varb byte_lol
 	varw word_lol
 	vard double_lol
-	varq qword_lol ; var is an alias for this.
+	varq qword_lol ; var is an alias for varq.
 	; Variables automagically become size-aligned.
 	; (Although not grouped by size, so having qword, follows by a byte, followed by a qword
 	;  will take 24 bytes.)
@@ -81,14 +82,22 @@ class thing	; Start a class of things. Note, there is no object-orientation here
 	; First, the docblock:
 
 	;! Description of algorithm
-	;: Type and_argument -> AnotherType and_another_argument -> ReturnType ReturnArgument
+	;: Type description -> ParameterizedType(a) descr -> ReturnType
 	;- registers_consumed
 	;+ registers_saved
-	:. procedures_used
+	;. procedures_used
+	;= alias1, alias2
 	; Long description of the algorith goes here.
-
-	; Then, the procedure.
+	;
+	; More on types:
+	;  Type a : Type b <- Means b immedeately following a in memory/register
+	;  *Type           <- Means  pointer to Type.
+	; Types don't always need a description.
+	;
+	; Then, the procedure:
 	proc proc_name, di->LOL ; register->new_name,
+	alias1 = thing.proc_name
+	alias2 = thing.proc_name
 		; rLOL is now equal to rdi.
 		; Also, rLOLd is edi, rLOLw is di, and rLOLb is dil.
 

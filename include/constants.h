@@ -1,3 +1,4 @@
+;; Helper constants.
 
 S:
 .1GiB = 40000000h

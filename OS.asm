@@ -1,3 +1,5 @@
+;; Main OS entry point.
+
 include 'OS.cfg'
 include 'include/macros.h'
 include 'include/cpu.h'
@@ -34,6 +36,7 @@ include 'kernel/alarm.asm' ; Needs kernel/ints
 include 'lib/stdlib.asm'   ; Needs kernel/mm
 include 'lib/queue.asm'    ; Needs stdlib
 include 'lib/mvar.asm'     ; Needs queue
+
 
 
 match =Y, CFG_TTY_TEXT {

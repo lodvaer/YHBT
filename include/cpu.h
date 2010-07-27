@@ -1,3 +1,5 @@
+;; CPU-related constants.
+
 ;REX-prefixes
 REX.W equ db 48h
 REX.R equ db 44h

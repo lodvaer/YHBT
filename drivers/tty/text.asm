@@ -1,4 +1,4 @@
-; NOT A VALID REPRESENTATION OF A DRIVER!
+;; NOT A VALID REPRESENTATION OF A DRIVER!
 
 TTY_TEXT_VIDEO_MEM equ 0B8000h
 
@@ -15,20 +15,20 @@ match =P, CFG_TTY_TEXT {
 	TTY_TEXT_VIDEO_OFFSET equ TTY_TEXT_VIDEO_MEM + 2*1024*1024
 }
 match =Y, CFG_TTY_TEXT {
-	TTY_TEXT_VIDEO_OFFSET equ TTY_TEXT_VIDEO_MEM + 2*1024*1024 ; 
+	TTY_TEXT_VIDEO_OFFSET equ TTY_TEXT_VIDEO_MEM + 2*1024*1024
 	append TO_INIT_64, tty.text.init
 	macro tty.text.init
 	\{
 		; Initialization goes here
 	\}
 }
-;; A classical 80x25 text-mode terminal
+;! A classical 80x25 text-mode terminal
 class tty.text
 	varb colour
-	;; Put a character on the screen
+	;! Put a character on the screen
 	;: Int x -> Int y -> Char c -> IO ()
-	;- di, si
-	proc putc
+	;- rdi, rsi
+	proc 0, putc
 		assert rdi, ge, 0, "putc: X is negative!"
 		assert rsi, ge, 0, "putc: Y is negative!"
 		assert rdi, le, 80, "putc: X more than 80!"
@@ -48,9 +48,9 @@ class tty.text
 		ret
 	endproc
 	
-	;; Write a continous stream of characters
+	;! Write a continous stream of characters
 	;: Int x -> Int y -> Int num -> *Char string -> IO ()
-	proc write, d->NUM
+	proc 0, write, d->NUM
 		assert rdi, g, 0, "write: num is 0!"
 		assert rdi, ge, 0, "write: X is negative!"
 		assert rsi, ge, 0, "write: Y is negative!"
@@ -78,17 +78,17 @@ class tty.text
 		ret
 	endproc
 
-	;; Set the colour to use
+	;! Set the colour to use
 	;: Char colour -> IO ()
-	proc set_colour
+	proc 0, set_colour
 		mov [this.colour], dil
 		ret
 	endproc
 
-	;; Clear the screen
+	;! Clear the screen
 	;: IO ()
-	;- a, c, di
-	proc reset
+	;- rax, rcx, rdi
+	proc 0, reset
 		xor eax, eax
 		mov rdi, TTY_TEXT_VIDEO_OFFSET
 		mov ecx, 25*80*2 / 4
@@ -96,11 +96,11 @@ class tty.text
 		ret
 	endproc
 
-	;; Save in image of the screen
+	;! Save in image of the screen
 	;: *Mem image
 	;. malloc
-	;- a, d, di, si
-	proc save
+	;- rax, rdx, rdi, rsi
+	proc 0, save
 		mov edi, 25*80*2
 		mov edx, edi
 		shr edx, 2
@@ -117,10 +117,10 @@ class tty.text
 		ret
 	endproc
 
-	;; Reinstate the screen from an image
+	;! Reinstate the screen from an image
 	;: *Mem image -> IO ()
-	;- a, d, di, si
-	proc reinstate
+	;- rax, rdx, rdi, rsi
+	proc 0, reinstate
 		mov edx, 25*80*2 / 4
 		mov rsi, rdi
 		mov rdi, TTY_TEXT_VIDEO_OFFSET
@@ -134,10 +134,10 @@ class tty.text
 		ret
 	endproc
 
-	;; Set the cursor position
+	;! Set the cursor position
 	;: Int x -> Int y -> IO ()
-	;- a, d, di, si
-	proc set_cursor
+	;- rax, rdx, rdi, rsi
+	proc 0, set_cursor
 		assert rdi, ge, 0, "set_cursor: X is negative!"
 		assert rsi, ge, 0, "set_cursor: Y is negative!"
 		assert rdi, le, 80, "set_cursor: X more than 80!"
@@ -167,17 +167,17 @@ class tty.text
 		ret
 	endproc
 
-	;t TTYLine :: *Mem
+	;: TTYLine :: *Mem
 
-	;; Scroll the screen up
+	;! Scroll the screen up
 	;: Line | () -> Bool keep line? -> Line | ()
-	proc scroll_up
+	proc 0, scroll_up
 		; TODO
 	endproc
 
-	;; Scroll the screen down
+	;! Scroll the screen down
 	;: Line | () -> Bool keep line? -> Line | ()
-	proc scroll_down
+	proc 0, scroll_down
 		; TODO
 	endproc
 endclass

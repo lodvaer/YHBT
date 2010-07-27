@@ -1,4 +1,4 @@
-; HIC SVNT LEONES
+;; Macros. HIC SVNT LEONES
 
 ; {{{ ASM extensions
 macro push [arg]
@@ -139,7 +139,7 @@ macro intproc name, [remaps]
 	; Don't assume we have a working stack.
 	common
 		CALLTRACE equ N
-		proc 0, name, remaps
+		proc 0, name, remaps ; IGNORE
 		restore CALLTRACE
 }
 ; Normal proc
@@ -390,7 +390,7 @@ macro class name
 		\common
 			append to_restore, \this\#\.\#\naem
 			\this\#\.\#\naem equ name\#\.\#\naem
-			proc stackspace, name\#\.\#\naem, args
+			proc stackspace, name\#\.\#\naem, args ; IGNORE
 	\}
 	macro endclass
 	\{
@@ -433,7 +433,7 @@ macro quaject name
 		\common
 			append to_restore, \this\#\.\#\naem
 			\this\#\.\#\naem equ name\#\.\#\naem
-			proc stackspace, name\#\.\#\naem, args
+			proc stackspace, name\#\.\#\naem, args ; IGNORE
 	\}
 	macro endquaject
 	\{

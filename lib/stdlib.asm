@@ -1,4 +1,4 @@
-
+;; Standard library definitions.
 
 EXIT_FAILURE = 1
 EXIT_SUCCESS = 0

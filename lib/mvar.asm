@@ -105,8 +105,9 @@ class mvar
 	const STATUS_GONE,     0
 	const STATUS_PUT_PLZ,  1
 	const STATUS_TAKE_PLZ, 2
+
 	;! Create a new MVar
-	;: a -> IO (MVar a)
+	;: a -> MVar(a)
 	;. malloc
 	;- rdi
 	; TODO: Alignment.
@@ -123,7 +124,7 @@ class mvar
 	endproc
 
 	;! Create a new empty MVar
-	;: IO (MVar a)
+	;: MVar(a)
 	;. malloc
 	;- rdi
 	proc 0, newEmpty
@@ -138,8 +139,9 @@ class mvar
 		ret
 	endproc
 
-	;! Take an MVar
-	;: MVar a -> IO a
+	;! Take something from an MVar
+	;: MVar(a) -> IO(a)
+	; May block, waiting for an MVar to be filled.
 	proc 0, take
 		spinlock saveto->rcx, rdi
 
@@ -164,12 +166,13 @@ class mvar
 		ret ; The other thread has put it in our rax <3.
 	endproc
 	
-	;: MVar a -> a -> IO ()
+	;! Put something in an MVar
+	;: MVar(a) -> a -> IO()
 	proc 0, put
 		spinlock saveto->rcx, rdi
 
 		mvar._put .sleep
-		
+
 	.sleep:
 		push rsi ; <- is the value on the stack for the waking thread to take.
 		push rdi
@@ -193,8 +196,9 @@ class mvar
 		call proc.descheduled
 		ret ; The other thread has taken it from our stack <3
 	endproc
-	;! Try to take an MVar
-	;: MVar a -> IO (Maybe a : Bool)
+
+	;! Try to take something from an MVar
+	;: MVar(a) -> IO(Maybe(a) : Bool)
 	; Returns a bool in rdx due to type a being able to be null.
 	proc 0, tryTake
 		spinlock saveto->rcx, rdi
@@ -207,7 +211,8 @@ class mvar
 		ret
 	endproc
 
-	;: MVar a -> a -> IO Bool
+	;! Try to put something in an MVar
+	;: MVar(a) -> a -> IO(Bool)
 	proc 0, tryPut
 		spinlock saveto->rcx, rdi
 		
@@ -218,7 +223,8 @@ class mvar
 		ret
 	endproc
 
-	;: MVar a -> a -> IO a
+	;! Swap the contents of an MVar
+	;: MVar(a) -> a -> IO(a)
 	proc 0, swap
 		push rsi
 		call mvar.take

@@ -1,4 +1,4 @@
-; The faults and their handlers.
+;; The faults and their handlers.
 
 the_faults fix divide, debug, nmi, breakpoint, overflow, boundscheck,\
 	  invalid_opcode, cocpu_unavail, doublefault, cocpu_overrun,  \
@@ -21,7 +21,7 @@ macro faults.init {
 }
 macro default_fault_proc name
 {
-	intproc name
+	intproc name ; IGNORE
 	xchg bx, bx
 	if name in <fault_has_error>
 	else
@@ -32,6 +32,7 @@ macro default_fault_proc name
 	jmp this.default_action
 }
 class faults
+	;! The default fault action.
 	intproc default_action	
 		pusha ; Pusha moves the stack 16*8 down.
 		call kputs ; Message

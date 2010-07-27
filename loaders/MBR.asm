@@ -1,3 +1,5 @@
+;; For loading directly from an MBR.
+
 org 07C00h		; We are safe here until the kernel reaches 27 KiB
 	jmp 0:start
 msg:

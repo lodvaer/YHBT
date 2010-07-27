@@ -1,4 +1,4 @@
-;; 
+;; The alarm, a scheduler of jobs.
 
 append TO_INIT_64, alarm.init
 
@@ -24,6 +24,7 @@ class alarm
 	
 	;! Interrupt handler
 	;: IO ()
+	;+ *
 	; Consideration list:
 	; SMP: One alarm list per CPU.
 	intproc tick
@@ -58,8 +59,8 @@ class alarm
 		iretq
 	endproc
 
-	;! Schedule a procedure to be called when time ticks has passed
-	;: Int time -> *Proc procedure -> IO Int id
+	;! Schedule a procedure to be called when $1 ticks has passed
+	;: Int time -> *Proc to schedule -> IO(Int) id
 	;- rax, rdx, rdi, rsi, r10, r11
 	; TODO:
 	;  - Anything better than an O(n) scheduler?

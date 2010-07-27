@@ -8,7 +8,7 @@ class ktty
 
 	;! Internal kernel puts-function
 	;: *0Char str -> IO ()
-	;. write
+	;. ktty.e_write
 	;= kputs
 	proc 0, kputs
 	kputs = this.kputs
@@ -17,19 +17,21 @@ class ktty
 		mov rsi, rax
 		tailcall qword [this.write]
 	endproc
+
 	;! Print an address
 	;: Int addr -> IO ()
-	;. write
+	;. ktty.e_write
 	;= kprintaddr
 	intproc kprintaddr
 	kprintaddr = this.kprintaddr
 		; As there is no point unless there's a symbol table loaded,
 		; fallthrough to the next, which is:
 	endproc
+
 	;! Print a number in hexadecimal
 	;: Int n -> IO ()
-	;- di, si
-	;. write
+	;- rdi, rsi
+	;. ktty.e_write
 	;= kprinthex
 	proc 0, kprinthex, 14->CNT, 15->NUM
 	kprinthex = this.kprinthex
@@ -41,19 +43,15 @@ class ktty
 		lea rdi, [.str]
 		mov esi, 2
 		call qword [this.write]
-		; A malloc-free version: (it wasn't stable when I wrote it)
-	.loop:
-		rol rNUM, 4
+	.loop:	rol rNUM, 4
 		mov al, rNUMb
 		and al, 0Fh
 
 		cmp al, 10
 		jae .hex
-	.dec:
-		add al, 30h
+	.dec:	add al, 30h
 		jmp .over
-	.hex:
-		add al, 37h
+	.hex:	add al, 37h
 	.over:	mov [this.hexbuf], al
 		lea rdi, [this.hexbuf]
 		mov esi, 1
@@ -66,10 +64,10 @@ class ktty
 
 	.str:	db "0x"
 	endproc
-	
+
 	;! Write a byte to the screen
-	;: Word <Char attr:Char chr> -> IO ()
-	;- a, d
+	;: (Char attr) : (Char chr) -> IO ()
+	;- rax, rdx
 	; the e_ is for early.
 	proc 0, e_putc
 		cmp dil, 10
@@ -102,9 +100,10 @@ class ktty
 		mov byte [this.y], 0
 		ret
 	endproc
+
 	;! Write a byte to the early tty.
 	;: *Char str -> Int size -> IO ()
-	;- di, si, r10
+	;- rdi, rsi, r10
 	;. ktty.e_putc
 	; A guaranteed working write to print something on the screen.
 	proc 0, e_write

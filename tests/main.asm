@@ -3,6 +3,7 @@
 jmp tests.over
 tests.torun equ
 
+;! The tests.
 class tests
 	include 'malloc.asm'
 	include 'rbtree.asm'

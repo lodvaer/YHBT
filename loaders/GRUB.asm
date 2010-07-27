@@ -1,3 +1,5 @@
+;; Multibootloader for booting with GRUB.
+
 multiboot:
 	dd 01badb002h
 	dd 1 shl 16

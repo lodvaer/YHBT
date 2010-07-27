@@ -4,6 +4,8 @@ YHBT toolset:
   lookup [addr] [range]
   -- Lookup an instruction address and the surounding instructions.
   -- range instructions gets printed in either direction.
+  doc x
+  -- Get documentation on x
 Common commands not included here:
   make
   -- Compile the source
@@ -16,3 +18,4 @@ EOD
 PWD=`pwd`
 
 alias lookup=$PWD'/tools/lookup.py'
+alias doc=$PWD'/tools/doc.py'

@@ -1,3 +1,5 @@
+;; File control.
+
 ; open :: *Char pathname -> Int flags -> (Fd fd|-Error)
 ; close :: Fd fd -> Int flags -> (Int 0|-Error)
 
@@ -23,8 +25,6 @@ O_DSYNC    =
 O_SYNC     = 
 
 O_CREAT    = 
-; Creating a file is done with open, sounds logical that
-; deleting is done with close?
 O_DELET    = 
 
 O_EXCL     = 

@@ -1,9 +1,5 @@
-; Kernel-specific mm-stuff.
-; Among other things:
-;  Paging; paddr_alloc, paddr_free, palloc, pfree,
-;          copying page directories,
-;          cloning page directories.
-; TODO: SLAB
+;; Kernel-specific mm-stuff.
+;; TODO: SLAB
 
 
 append TO_INIT_16, mm.init_16
@@ -72,7 +68,7 @@ class mm
 	ivar phead, 0
 
 	;! Allocate and map a page into a page table
-	;: *Mem loc -> (PML4|0) -> -> *Mem page
+	;: *Mem loc -> (PML4|0) -> *Mem page
 	;. this.paddr_get
 	;- rax, rdi, rsi, r10, r11, r8
 	proc 0, palloc

@@ -40,6 +40,9 @@ macro ints.init {
 include 'kernel/faults/main.asm'
 
 class ints
+	;! The null interrupt, i.e. unhandled.
+	;: IO ()
+	; Increments top left corner.
 	intproc null
 		push rax
 		mov al, 20h

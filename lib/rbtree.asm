@@ -245,7 +245,7 @@ class rbtree
 
 	;! Rotate the node left.
 	;: RBTree A -> RBNode A -> IO ()
-	;- ax, si, r10, r11
+	;- rax, rsi, r10, r11
 	proc 0, rotate_left, di->ROOT, si->NODE, 10->RIGHT, 11->PARENT
 		assert rROOT, ne, 0, "rbtree.rotate_left: null given as root."
 		assert rNODE, ne, 0, "rbtree.rotate_left: null given as node."
