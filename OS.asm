@@ -32,6 +32,8 @@ include 'kernel/misc.asm'
 include 'kernel/tables.asm'
 include 'kernel/ktty.asm'
 include 'kernel/ints.asm'
+include 'kernel/syscalls.asm'
+include 'kernel/vfs.asm'
 include 'kernel/alarm.asm' ; Needs kernel/ints
 include 'lib/stdlib.asm'   ; Needs kernel/mm
 include 'lib/queue.asm'    ; Needs stdlib
@@ -66,46 +68,15 @@ match =Y, CFG_TESTRUN {
 	push rax
 	jmp proc.init
 .t0:	; We are here in thread 0.
-	call mvar.newEmpty
-	mov [whut], rax
 
-	call proc.fork
-	cmp rax, 0
-	je .child1
-
-	xor rbp, rbp
-	mov rbx, 0
-@@:	dec rbx
-	mov rsi, rbx
-	mov rdi, [whut]
-	call mvar.put
-	jmp @b
-
-
-.child1:
-	call proc.fork
-	cmp rax, 0
-	je .child2
-	xor rbp, rbp
-	sub rsp, 200h
-	mov rbx, 0
-@@:	inc rbx
-	mov rdi, [whut]
-	mov rsi, rbx
-	call mvar.put
-	jmp @b
-
-.child2:
-	xor rbp, rbp
-	sub rsp, 400h
-@@:	xchg bx, bx
-	mov rdi, [whut]
-	call mvar.take
-	_puts "Got ", rax
-	jmp @b
+	call proc.execve
+	xor bx, bx
+	mov rax, 50DEADBEEF5h
+	mov rax, [rax]
+	jmp .t0
+align 8
 
 align 64 ; So it's on a different cache line.
-whut:	dq 0
 _IVARS:
 match I, TO_IVAR {
 	irp do_ivar, I \{

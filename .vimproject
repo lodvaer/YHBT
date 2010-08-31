@@ -16,7 +16,9 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
   misc.asm
   mm.asm
   q.asm
+  syscalls.asm
   tables.asm
+  vfs.asm
   proc=proc {
    proc.asm
    procfs.asm
@@ -24,8 +26,6 @@ YHBT="~/prog/YHBT" CD=. filter="LICENCE SOURCE_ME README TODO ABI Makefile *.fas
   }
   faults=faults {
    main.asm
-  }
-  syscall=syscall {
   }
  }
  include=include {

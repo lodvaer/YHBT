@@ -1,5 +1,5 @@
 ;; Kernel-specific mm-stuff.
-;; TODO: SLAB
+;; TODO: SLAB, reference counting of pages, complete rewrite...
 
 
 append TO_INIT_16, mm.init_16

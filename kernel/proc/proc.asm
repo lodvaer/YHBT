@@ -100,6 +100,63 @@ end if
 		ret
 	endproc
 
+	;! Execute program
+	;: *Char filename -> **Char argv -> **Char envp -> IO ()
+	;- *
+	; TODO: Use filename, argv and envp...
+	; TODO: ELF, interpreters, etc.
+	proc 0, execve
+		call open
+		mov r12, rax
+
+
+		mov ecx, MSR.KGS
+		rdmsr
+		shl rdx, 32
+		mov r13d, eax
+		or  r13, rdx
+
+		; TODO: Clear old lower half of PML4
+		; As this is used at the moment for only init, we only make sure
+		; that 2000000h actually is mapped.
+
+		mov rdi, 2000000h
+		xor esi, esi
+		call mm.palloc
+
+		mov rdi, 7FFFFFFFF000h
+		xor esi, esi
+		call mm.palloc
+
+		mov rsp, 7FFFFFFFFFD0h
+		; Set up iretq stack.
+		mov qword [rsp      ], 2000000h     ; rip
+		mov qword [rsp + 8  ], SEL_USR_LONG ; cs
+		pushf
+		pop rax
+		mov qword [rsp + 10h], rax          ; rflags
+		mov qword [rsp + 18h], rsp          ; rsp
+		mov qword [rsp + 20h], SEL_USR_DATA ; ss
+
+		mov rdi, r12      ; Read the file into RAM
+		mov rsi, 2000000h
+		xor edx, edx
+		dec edx
+		call read
+
+		xor eax, eax
+		xor ebx, ebx
+		xor ecx, ecx
+		xor edx, edx
+		xor edi, edi
+		xor esi, esi
+		xor ebp, ebp
+		xor esi, esi
+		xor esi, esi
+
+		iretq
+	endproc
+
 	;! Give way for the next procedure.
 	;- rax, rdi, rsi, rdx, rcx, r10, r11
 	intproc yield

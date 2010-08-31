@@ -13,7 +13,7 @@ clean :
 		$(MAKE) clean --directory=$$d; \
 	done
 
-q : MBR
+q : initramfs MBR
 	qemu-img create /tmp/hda 50M >/dev/null
 	dd if=kern of=/tmp/hda conv=notrunc 2>&1 >/dev/null
 	qemu-system-x86_64 -no-reboot -monitor stdio -hda /tmp/hda

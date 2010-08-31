@@ -170,6 +170,12 @@ macro proc stackspace, name, [remaps]
 				end if
 				jmp addr
 			\\}
+			macro sysretq \\{
+				if stackspace <> 0
+					leave
+				end if
+				sysretq
+			\\}
 			macro retj c, landing \\{
 				if stackspace <> 0
 					j\\#c leave.\\#landing
@@ -191,6 +197,10 @@ macro proc stackspace, name, [remaps]
 			macro tailcall addr \\{
 				call addr
 				ret
+			\\}
+			macro sysretq \\{
+				leave
+				sysretq
 			\\}
 			macro retj c, landing \\{
 				j\\#c leaving.\\#landing
@@ -265,7 +275,7 @@ macro proc stackspace, name, [remaps]
 					restore top
 				\\\}
 			\\}
-			purge endproc, remap, _remap, ret, tailcall, retj
+			purge endproc, remap, _remap, ret, tailcall, sysretq, retj
 		\}
 	
 }
